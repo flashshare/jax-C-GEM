@@ -42,7 +42,7 @@ nav:
       - Understanding Results: results.md
       - Why JAX C-GEM?: user-guide/why-jax-cgem.md
   - C vs JAX Comparison: comparison.md
-  - JAX Python API:
+  - C-GEM Python API:
       - Overview: JAX_CGEM/namespaces.md
       - Core Modules: JAX_CGEM/namespacecore.md
       - Simulation Engine: JAX_CGEM/namespacecore_1_1simulation__engine.md

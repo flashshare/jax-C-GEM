@@ -27,6 +27,4 @@ black>=22.0.0
 # Documentation tools
 mkdocs>=1.6.0
 mkdocs-material>=9.0.0
-mkapi>=2.0.0
-mkdocs-git-revision-date-localized-plugin>=1.2.0
-mkdocs-minify-plugin>=0.7.0
+mkdoxy>=1.2.7
