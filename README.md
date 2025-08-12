@@ -5,10 +5,11 @@
 [![JAX](https://img.shields.io/badge/JAX-0.4%2B-orange)](https://jax.readthedocs.io)
 [![Build Status](https://github.com/flashshare/jax-C-GEM/actions/workflows/python-app.yml/badge.svg)](https://github.com/flashshare/jax-C-GEM/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Experimental-yellow)](https://github.com/flashshare/jax-C-GEM)
 
-**A High-Performance 1D Tidal Estuary Model Built with JAX**
+**Experimental Conversion of C-GEM (C) to JAX Python for High-Performance Computing**
 
-JAX C-GEM is a complete reimplementation of the Carbon-Generic Estuarine Model (C-GEM) using modern JAX computational science. This model simulates the complex interplay of hydrodynamics, transport, and biogeochemistry in tidal estuaries with unprecedented computational efficiency and gradient-based optimization capabilities.
+JAX C-GEM is an experimental reimplementation of the Carbon-Generic Estuarine Model (C-GEM), converting the original C programming implementation into Python using the JAX high-performance computing framework. This project aims to explore the potential performance benefits and gradient-based optimization capabilities offered by JAX while maintaining the scientific integrity of the original C-GEM model.
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
 [![JAX](https://img.shields.io/badge/JAX-0.4%2B-orange)](https://jax.readthedocs.io)
