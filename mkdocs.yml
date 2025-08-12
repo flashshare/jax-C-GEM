@@ -1,0 +1,56 @@
+site_name: JAX C-GEM
+site_description: C-GEM to JAX Python conversion - High-performance tidal estuary modeling
+site_author: Nguyen Truong An
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      accent: orange
+  features:
+    - navigation.tabs
+    - navigation.top
+
+plugins:
+  - search
+  - mkdoxy:
+      projects:
+        JAX_CGEM:
+          src-dirs: src
+          full-doc: True
+          doxy-cfg:
+            FILE_PATTERNS: "*.py"
+            RECURSIVE: True
+            EXTRACT_ALL: YES
+            EXTRACT_PRIVATE: NO
+            EXTRACT_STATIC: YES
+            EXTRACT_LOCAL_CLASSES: YES
+        CGEM_C:
+          src-dirs: deprecated/original-C-GEM
+          full-doc: True
+          doxy-cfg:
+            FILE_PATTERNS: "*.c *.h"
+            RECURSIVE: True
+
+nav:
+  - Overview: index.md
+  - Quick Start: quick-start.md
+  - Usage Guide:
+      - Installation: installation.md
+      - Running the Model: running-model.md
+      - Understanding Results: results.md
+      - Why JAX C-GEM?: user-guide/why-jax-cgem.md
+  - C vs JAX Comparison: comparison.md
+  - JAX Python API:
+      - Overview: JAX_CGEM/namespaces.md
+      - Core Modules: JAX_CGEM/namespacecore.md
+      - Simulation Engine: JAX_CGEM/namespacecore_1_1simulation__engine.md
+      - Hydrodynamics: JAX_CGEM/namespacecore_1_1hydrodynamics.md
+      - Transport: JAX_CGEM/namespacecore_1_1transport.md
+      - Biogeochemistry: JAX_CGEM/namespacecore_1_1biogeochemistry.md
+      - Configuration: JAX_CGEM/namespacecore_1_1config__parser.md
+  - Original C-GEM API:
+      - Overview: CGEM_C/files.md
+      - Main Functions: CGEM_C/functions.md
+      - Structures: CGEM_C/annotated.md

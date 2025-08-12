@@ -11,7 +11,7 @@
 # 1. Navigate to project directory
 cd /path/to/jax-C-GEM
 
-# 2. Run ultra-performance simulation (30,000+ steps/min)
+# 2. Run ultra-performance simulation (~15 minutes for 1-year simulation)
 python main_ultra_performance.py
 
 # 3. View results (automatically created, or manually)
@@ -21,7 +21,7 @@ python tools/plotting/show_results.py
 ### Using VS Code Tasks (Recommended)
 1. Open VS Code in the project directory
 2. Press `Ctrl+Shift+P` → "Tasks: Run Task"
-3. Select `⚡ Maximum Performance Mode` for fastest execution
+3. Select `⚡ Ultra-Performance Mode` for fastest execution (~15 minutes)
 4. **Results automatically displayed** - or use `📊 Comprehensive Results Viewer` for detailed analysis
 
 ---
