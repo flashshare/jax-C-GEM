@@ -1,0 +1,142 @@
+# Number of tributaries to read
+numTributaries=4
+
+# Include tributaries? (1 = Yes, 0 = No)
+tributaryEnabled=1
+
+# For boundary conditions, we define:
+# name: a short identifier
+# type: upstream or downstream
+# Phy1, Phy2, tocFile, O2File, etc. specify the input file paths, same as enum chem {Phy1, Phy2, Si, NO3, NH4, PO4, O2, TOC, Sal, SPM, DIC, AT, pCO2, PH, CO2}
+# but no pCO2, PH, CO2 data requirement since they automatically calculated from other parameters
+
+# Boundary conditions
+name=Upstream
+type=UpperBoundary
+resolution=daily
+Phy1=INPUT/Boundary/UB/dia_ub.csv
+Phy2=INPUT/Boundary/UB/ndia_ub.csv
+Si=INPUT/Boundary/UB/si_ub.csv
+NO3=INPUT/Boundary/UB/NO3_ub.csv
+NH4=INPUT/Boundary/UB/NH4_ub.csv
+PO4=INPUT/Boundary/UB/po4_ub.csv
+O2=INPUT/Boundary/UB/O2_ub.csv
+TOC=INPUT/Boundary/UB/TOC_ub.csv
+Sal=INPUT/Boundary/UB/S_ub.csv
+SPM=INPUT/Boundary/UB/spm_ub.csv
+DIC=INPUT/Boundary/UB/DIC_ub.csv
+AT=INPUT/Boundary/UB/AT_ub.csv
+
+# Downstream boundary, no discharge requirement at downstream boundary
+name=Downstream
+type=LowerBoundary
+resolution=daily
+Phy1=INPUT/Boundary/LB/dia_lb.csv
+Phy2=INPUT/Boundary/LB/ndia_lb.csv
+Si=INPUT/Boundary/LB/si_lb.csv
+NO3=INPUT/Boundary/LB/NO3_lb.csv
+NH4=INPUT/Boundary/LB/NH4_lb.csv
+PO4=INPUT/Boundary/LB/po4_lb.csv
+O2=INPUT/Boundary/LB/O2_lb.csv
+TOC=INPUT/Boundary/LB/TOC_lb.csv
+Sal=INPUT/Boundary/LB/S_lb.csv
+SPM=INPUT/Boundary/LB/spm_lb.csv
+DIC=INPUT/Boundary/LB/DIC_lb.csv
+AT=INPUT/Boundary/LB/AT_lb.csv
+
+# DailyForcing: Daily data for discharge, temperature, wind
+name=DailyForcing
+type=Forcing
+resolution=daily 
+DischargeFile=INPUT/Boundary/UB/discharge_ub.csv
+TemperatureFile=INPUT/Boundary/LB/T.csv
+WindFile=INPUT/Boundary/wind.csv
+
+# HourlyForcing: Hourly data for elevation, light
+name=HourlyForcing
+type=Forcing
+resolution=hourly 
+ElevationFile=INPUT/Boundary/LB/elevation.csv
+LightFile=INPUT/Boundary/LB/Light.csv
+
+# ---------TRIBUTARIES----------
+
+# For each tributary, we define:
+# name: a short identifier
+# cellIndex: the river cell index where this flow enters
+# type: Tributary
+# data for similar to this order enum chem {Phy1, Phy2, Si, NO3, NH4, PO4, O2, TOC, Sal, SPM, DIC, AT, pCO2, PH, CO2}
+# plus daily discharge
+# but no salinity pCO2, PH, CO2 data requirement for tributaries
+
+# ----------Tributary 1----------
+name=Dongnai
+type=Tributary
+resolution=daily
+cellIndex=31
+discharge=INPUT/Tributaries/Dongnai/discharge.csv
+Phy1=INPUT/Tributaries/Dongnai/dia_ub.csv
+Phy2=INPUT/Tributaries/Dongnai/ndia_ub.csv
+Si=INPUT/Tributaries/Dongnai/si_ub.csv
+NO3=INPUT/Tributaries/Dongnai/NO3_ub.csv
+NH4=INPUT/Tributaries/Dongnai/NH4_ub.csv
+PO4=INPUT/Tributaries/Dongnai/po4_ub.csv
+O2=INPUT/Tributaries/Dongnai/O2_ub.csv
+TOC=INPUT/Tributaries/Dongnai/toc_ub.csv
+SPM=INPUT/Tributaries/Dongnai/SPM_ub.csv
+DIC=INPUT/Tributaries/Dongnai/NO3_ub.csv
+AT=INPUT/Tributaries/Dongnai/NO3_ub.csv
+
+# ----------Tributary 2----------
+name=Canals
+type=Tributary
+resolution=daily
+cellIndex=37
+discharge=INPUT/Tributaries/Canals/discharge.csv
+Phy1=INPUT/Tributaries/Canals/dia_ub.csv
+Phy2=INPUT/Tributaries/Canals/ndia_ub.csv
+Si=INPUT/Tributaries/Canals/si_ub.csv
+NO3=INPUT/Tributaries/Canals/NO3_ub.csv
+PO4=INPUT/Tributaries/Canals/po4_ub.csv
+O2=INPUT/Tributaries/Canals/O2_ub.csv
+TOC=INPUT/Tributaries/Canals/toc_ub.csv
+NH4=INPUT/Tributaries/Canals/NH4_ub.csv
+SPM=INPUT/Tributaries/Canals/SPM_ub.csv
+DIC=INPUT/Tributaries/Dongnai/NO3_ub.csv
+AT=INPUT/Tributaries/Dongnai/NO3_ub.csv
+
+# ----------Tributary 3----------
+name=VamThuat
+type=Tributary
+cellIndex=45
+resolution=daily
+discharge=INPUT/Tributaries/VamThuat/discharge.csv
+TOC=INPUT/Tributaries/VamThuat/toc_ub.csv
+O2=INPUT/Tributaries/VamThuat/O2_ub.csv
+NH4=INPUT/Tributaries/VamThuat/NH4_ub.csv
+NO3=INPUT/Tributaries/VamThuat/NO3_ub.csv
+Phy1=INPUT/Tributaries/VamThuat/dia_ub.csv
+Phy2=INPUT/Tributaries/VamThuat/ndia_ub.csv
+Si=INPUT/Tributaries/VamThuat/si_ub.csv
+PO4=INPUT/Tributaries/VamThuat/po4_ub.csv
+SPM=INPUT/Tributaries/VamThuat/SPM_ub.csv
+DIC=INPUT/Tributaries/Dongnai/NO3_ub.csv
+AT=INPUT/Tributaries/Dongnai/NO3_ub.csv
+
+# ----------Tributary 4----------
+name=ThiTinh
+type=Tributary
+cellIndex=61
+resolution=daily
+discharge=INPUT/Tributaries/ThiTinh/discharge.csv
+TOC=INPUT/Tributaries/ThiTinh/toc_ub.csv
+O2=INPUT/Tributaries/ThiTinh/O2_ub.csv
+NH4=INPUT/Tributaries/ThiTinh/NH4_ub.csv
+NO3=INPUT/Tributaries/ThiTinh/NO3_ub.csv
+Phy1=INPUT/Tributaries/ThiTinh/dia_ub.csv
+Phy2=INPUT/Tributaries/ThiTinh/ndia_ub.csv
+Si=INPUT/Tributaries/ThiTinh/si_ub.csv
+PO4=INPUT/Tributaries/ThiTinh/po4_ub.csv
+SPM=INPUT/Tributaries/ThiTinh/SPM_ub.csv
+DIC=INPUT/Tributaries/Dongnai/NO3_ub.csv
+AT=INPUT/Tributaries/Dongnai/NO3_ub.csv

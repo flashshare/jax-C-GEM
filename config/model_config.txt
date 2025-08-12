@@ -1,0 +1,98 @@
+# =====================
+# Platform Optimizations  
+# =====================
+# Optimized for Windows Core i7 laptops without GPU
+# Idealized model for sparse data regions
+platform_mode = "cpu"       # Force CPU execution (no GPU required)
+jax_threads = 4             # Optimize for typical Core i7 quad-core
+memory_fraction = 0.8       # Conservative memory usage
+
+# =====================
+# Calibration Settings
+# =====================
+calibration_mode = 0   # 0 = No Calibration, 1 = CMAES
+use_checkpointing = 1  # 1 = Save intermediate results, 0 = No checkpointing
+
+# =====================
+# Model Simulation Time
+# =====================
+MAXT = 465             # Max simulation time [days] - 100 days warmup + 730 days (2 years) simulation
+WARMUP = 100           # Warm-up period [days] - Allow model to stabilize before real simulation
+DELTI = 180           # Time step [sec] - 3 minutes for proper biogeochemical reactions  
+TS = 10               # Output save frequency - Save every 10 time steps (30 min output = 10 * 180 sec)
+DELXI = 2000          # Spatial step [m]
+EL = 202000           # Estuarine length [m] - Gives M=102 grid points (EVEN number required for C-GEM)
+AMPL = 4.43           # Tidal amplitude at the mouth [m] - Match C-GEM exactly
+Q_AVAIL = 250         # Default river discharge [m³/s] - Typical moderate discharge
+
+# =====================
+# Simulation Start Date
+# =====================
+# The calendar date corresponding to the BEGINNING of the TOTAL simulation (including warmup)
+# The model will:
+# - Days 1-100: Warmup period using 2017 input data (model stabilization)  
+# - Days 101-830: Real simulation covering full 2 years (2017-01-01 to 2018-12-31)
+# This ensures proper model initialization and covers all field observation periods
+simulation_start_date = "2017-01-01"  # Start date of TOTAL simulation (including warmup)
+time_zone = "UTC+7"                    # Local time zone (Saigon River is UTC+7)
+
+# =====================
+# Riverbed Profile File
+# =====================
+riverbed_profile_file = "INPUT/Geometry/river_bed_profile.txt"  # File for riverbed depth
+
+# =====================
+# Transport Calibration Parameters
+# =====================
+num_segments = 2             # Number of LC segments
+
+# ----- Segment 1 -----
+index_1 = 0                  # First segment starts at cell index 0
+B1 = 3887.00                 # Width at the mouth [m] 
+LC1 = 50000.00               # Convergence length in segment 1 [m] - Moderate value
+LC1_min = 30000.00
+LC1_max = 80000.00
+Chezy1 = 60.0                # Chezy coefficient segment 1 - Typical value
+Chezy1_min = 40.0
+Chezy1_max = 80.0
+Rs1 = 1.2                    # Storage width ratio segment 1 - Moderate enhancement
+Rs1_min = 0.9
+Rs1_max = 1.5
+
+# ----- Segment 2 -----
+index_2 = 31                 # Second segment starts at cell index 31 
+B2 = 450.00                  # Width at segment 2 [m]  B_infl
+LC2 = 40000.00               # Convergence length in segment 2 [m] - Moderate value
+LC2_min = 20000.00
+LC2_max = 60000.00
+Chezy2 = 50.0                # Chezy coefficient segment 2 - Typical value
+Chezy2_min = 30.0
+Chezy2_max = 70.0
+Rs2 = 1.1                    # Storage width ratio segment 2 - Slight enhancement
+Rs2_min = 0.9
+Rs2_max = 1.3
+
+# =====================
+# Sediment Parameters (Consistent with Segments)
+# =====================
+# ----- Segment 1 -----
+Mero1 = 1.3e-6              # Erosion coefficient for segment 1
+Mero1_min = 1.0e-6
+Mero1_max = 2.0e-6
+tau_ero1 = 1.2              # Critical shear stress for erosion in segment 1
+tau_ero1_min = 0.8
+tau_ero1_max = 1.5
+tau_dep1 = 0.35             # Critical shear stress for deposition in segment 1
+tau_dep1_min = 0.2
+tau_dep1_max = 0.6
+
+# ----- Segment 2 -----
+Mero2 = 1.6e-5              # Erosion coefficient for segment 2
+Mero2_min = 1.0e-5
+Mero2_max = 2.5e-5
+tau_ero2 = 0.8              # Critical shear stress for erosion in segment 2
+tau_ero2_min = 0.5
+tau_ero2_max = 1.2
+tau_dep2 = 0.25             # Critical shear stress for deposition in segment 2
+tau_dep2_min = 0.15
+tau_dep2_max = 0.5
