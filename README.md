@@ -3,7 +3,7 @@
 <!--- Badges -->
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
 [![JAX](https://img.shields.io/badge/JAX-0.4%2B-orange)](https://jax.readthedocs.io)
-[![Build Status](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/python-app.yml/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions)
+[![Build Status](https://github.com/flashshare/jax-C-GEM/actions/workflows/python-app.yml/badge.svg)](https://github.com/flashshare/jax-C-GEM/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 **A High-Performance 1D Tidal Estuary Model Built with JAX**
@@ -973,3 +973,4 @@ python src/main.py --mode run --debug --physics-check
 2. **Enable debug mode**: `--debug` for detailed diagnostics
 3. **Physics validation**: `--physics-check` catches violations early
 4. **Visual inspection**: Use `python tools/plotting/show_plots`
+

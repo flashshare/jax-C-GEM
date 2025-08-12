@@ -15,7 +15,7 @@ Key Features:
 - Statistical analysis and visualization
 - Generates comprehensive benchmark report
 
-Author: JAX C-GEM Team
+Author: Nguyen Truong An
 """
 
 import os

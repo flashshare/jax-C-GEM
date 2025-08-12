@@ -11,7 +11,7 @@ Features:
 - Metadata and statistics generation
 - Error handling and progress reporting
 
-Author: JAX C-GEM Team
+Author: Nguyen Truong An
 """
 
 import os

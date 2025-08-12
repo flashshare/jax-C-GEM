@@ -13,7 +13,7 @@ Features:
 - Publication-ready tables and LaTeX output
 - Automatic NPZ/CSV data loading with format detection
 
-Author: JAX C-GEM Team
+Author: Nguyen Truong An
 """
 import os
 import numpy as np

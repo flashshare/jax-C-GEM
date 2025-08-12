@@ -11,7 +11,7 @@ core calibration philosophy of statistical aggregate comparison.
 - Include variability magnitude comparison (standard deviations)
 - Weight different data types appropriately with uncertainty quantification
 
-Author: JAX C-GEM Team
+Author: Nguyen Truong An
 """
 import jax
 import jax.numpy as jnp

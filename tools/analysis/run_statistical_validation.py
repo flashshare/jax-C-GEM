@@ -5,7 +5,7 @@ Statistical Model Validation Script for JAX C-GEM.
 This script performs comprehensive statistical validation of model results against field data
 using the ModelValidator class with advanced statistical metrics.
 
-Author: JAX C-GEM Team
+Author: Nguyen Truong An
 """
 import sys
 import os

@@ -10,7 +10,7 @@ Features:
 - Visualization of sensitivity results
 - Statistical summary of parameter importance
 
-Author: JAX C-GEM Team
+Author: Nguyen Truong An
 """
 
 import os

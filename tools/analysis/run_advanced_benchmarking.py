@@ -5,7 +5,7 @@ Advanced Statistical Benchmarking Script for JAX C-GEM.
 This script performs advanced statistical benchmarking with cross-validation, 
 uncertainty quantification, and comprehensive model comparison.
 
-Author: JAX C-GEM Team
+Author: Nguyen Truong An
 """
 import sys
 import os

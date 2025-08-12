@@ -11,7 +11,7 @@ Features:
 - Support for complex weighted objectives
 - Sparse data handling capabilities
 
-Author: JAX C-GEM Team
+Author: Nguyen Truong An
 """
 
 import os

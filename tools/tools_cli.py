@@ -10,7 +10,7 @@ Usage examples:
     python tools_cli.py analysis --sensitivity
     python tools_cli.py validation --benchmark
 
-Author: JAX C-GEM Team
+Author: Nguyen Truong An
 """
 
 import argparse

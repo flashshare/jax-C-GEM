@@ -10,7 +10,7 @@ statistical tests, cross-validation, and uncertainty quantification methods.
 - Generate comprehensive validation reports
 - Compare against benchmark models and observations
 
-Author: JAX C-GEM Team
+Author: Nguyen Truong An
 """
 import jax
 import jax.numpy as jnp

@@ -14,7 +14,7 @@ for key water quality parameters.
 Usage:
     python tools/validation/validate_against_field_data.py
 
-Author: JAX C-GEM Team
+Author: Nguyen Truong An
 """
 import sys
 import os
