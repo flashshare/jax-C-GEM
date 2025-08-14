@@ -16,8 +16,8 @@ use_checkpointing = 1  # 1 = Save intermediate results, 0 = No checkpointing
 # =====================
 # Model Simulation Time
 # =====================
-MAXT = 465             # Max simulation time [days] - 100 days warmup + 730 days (2 years) simulation
-WARMUP = 100           # Warm-up period [days] - Allow model to stabilize before real simulation
+MAXT = 40             # Max simulation time [days] - 100 days warmup + 730 days (2 years) simulation
+WARMUP = 10           # Warm-up period [days] - Allow model to stabilize before real simulation
 DELTI = 180           # Time step [sec] - 3 minutes for proper biogeochemical reactions  
 TS = 10               # Output save frequency - Save every 10 time steps (30 min output = 10 * 180 sec)
 DELXI = 2000          # Spatial step [m]

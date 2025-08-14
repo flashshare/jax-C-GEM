@@ -1,9 +1,0 @@
-FIGURE CAPTIONS FOR MANUSCRIPT
-========================================
-
-Figure 1: Hydrodynamics & Transport Model Validation
-Comprehensive validation of hydrodynamics and transport processes. (a) Tidal range longitudinal profile comparing model results (red line) with field observations (red dots). (b) Salinity longitudinal profile showing model mean (purple line) with variability band (shaded) and observations (pink dots). (c) Estuary geometry showing width (blue) and depth (brown) profiles used in the model. (d) Velocity patterns showing mean and maximum absolute velocities along the estuary. (e-g) Time series of salinity (blue) and water level (red) at three representative stations: downstream, middle, and upstream. Vertical dashed lines in panels (a-d) show station locations.
-
-Figure 2: Water Quality Model Analysis
-Comprehensive water quality analysis showing spatial patterns and temporal dynamics. (a) Dissolved oxygen longitudinal profile with model mean (red line), variability (shaded), hypoxia threshold (dashed line), and field observations (orange dots). (b) Nutrient concentration profiles for nitrate (blue), ammonium (orange), and phosphate (green). (c) Phytoplankton biomass profiles showing diatoms (cyan) and other phytoplankton (olive). (d-f) Time series of dissolved oxygen (left axis) and nitrate (right axis) at three stations: downstream, middle, and upstream. Vertical dashed lines in panels (a-c) show station locations.
-
