@@ -39,13 +39,13 @@ jobs:
         
     - name: Build documentation
       run: |
-        run: mkdocs build --no-strict --clean --site-dir _site
+        mkdocs build --no-strict --clean --site-dir _site
         
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
         name: mkdocs-site  # ✅ Ensures unique artifact name
-        path: ./_site
+        path: ./site
 
     - name: Deploy to GitHub Pages
       id: deployment
