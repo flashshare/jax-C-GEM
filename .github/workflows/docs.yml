@@ -32,6 +32,12 @@ jobs:
     - name: Install Doxygen
       run: sudo apt-get update && sudo apt-get install -y doxygen
       
+    - name: Cache Python packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -45,7 +51,7 @@ jobs:
       uses: actions/upload-pages-artifact@v3
       with:
         name: mkdocs-site  # ✅ Ensures unique artifact name
-        path: ./site
+        path: ./_site
 
     - name: Deploy to GitHub Pages
       id: deployment
