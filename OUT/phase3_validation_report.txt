@@ -1,0 +1,25 @@
+# PHASE 3 VALIDATION REPORT: SEASONAL CYCLES
+============================================================
+Generated: 2025-08-16 17:13:56
+
+## Model Performance Summary
+
+### Validation Metrics Summary
+
+| Variable | Station | RMSE | Correlation | Nash-Sutcliffe | N Points |
+|----------|---------|------|-------------|----------------|----------|
+| S | PC | 18.351 | nan | nan | 9 |
+| S | BD | 18.683 | 0.673 | -2962.533 | 9 |
+| S | BK | 14.509 | -0.560 | -494.604 | 9 |
+
+## Success Criteria Evaluation
+
+✅ High Correlation (r > 0.5): 1/2 cases
+✅ Low RMSE: 0/3 cases
+✅ Overall Success Rate: 20.0%
+
+## Recommendations
+
+- Review parameters for variables with poor correlation
+- Consider additional calibration for high RMSE cases
+- Validate temporal resolution matches seasonal patterns

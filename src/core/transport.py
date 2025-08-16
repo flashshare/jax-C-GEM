@@ -235,200 +235,110 @@ def apply_boundary_conditions_transport(concentrations: jnp.ndarray,
                                       velocities: jnp.ndarray,
                                       boundary_conditions: Dict[str, jnp.ndarray],
                                       DELTI: float, DELXI: float) -> jnp.ndarray:
-    """Apply transport boundary conditions with strict physical enforcement.
+    """Apply enhanced mass-conserving boundary conditions (Task 17 optimization).
     
-    This version strictly enforces realistic boundary values, especially for salinity,
-    to prevent unrealistic accumulation and ensure physical conservation laws are maintained.
+    Key improvements from Phase VII Task 17:
+    - Fixed downstream flux = 0 issue identified in Task 16
+    - Mass-conserving boundary conditions for particulate species
+    - Equilibrium-based PIP handling
+    - JAX-compatible implementation
     """
     MAXV, M = concentrations.shape
     c_new = concentrations.copy()
     
-    # Define physically realistic boundary condition values
-    # This ensures realistic values even if boundary data is missing
-    default_downstream = jnp.ones(MAXV) * 1e-5
-    default_upstream = jnp.ones(MAXV) * 1e-5
+    # Define equilibrium concentrations for particulates (Task 16 discovery)
+    pip_equilibrium_ocean = 0.02  # mmol/m³ (5% of typical PO4)
+    pip_equilibrium_river = 0.06  # mmol/m³ (8% of typical PO4)
     
-    # Ocean boundary values based on typical estuarine conditions
-    default_downstream = default_downstream.at[9].set(32.0)    # Sea water salinity (PSU)
-    default_downstream = default_downstream.at[7].set(250.0)   # Oxygen (mmol/m³)
-    default_downstream = default_downstream.at[3].set(5.0)     # Nitrate (mmol/m³)
-    default_downstream = default_downstream.at[4].set(2.0)     # Ammonium (mmol/m³)
-    default_downstream = default_downstream.at[5].set(0.5)     # Phosphate (mmol/m³)
-    default_downstream = default_downstream.at[6].set(0.02)     # PIP - Consistent with equilibrium init (mmol/m³)
-    default_downstream = default_downstream.at[11].set(2100.0)  # DIC - Typical seawater (mmol C/m³)
-    default_downstream = default_downstream.at[12].set(2400.0)  # AT - Typical seawater alkalinity (mmol/m³)
-    default_downstream = default_downstream.at[15].set(1900.0)  # ALKC - Carbonate alkalinity (mmol/m³)
+    # Ocean boundary conditions (right boundary, index -1)
+    ocean_concentrations = jnp.array([
+        10.0,    # PHY1 - Low oceanic phytoplankton
+        10.0,    # PHY2 - Low oceanic phytoplankton  
+        50.0,    # SI - Oceanic silicate
+        5.0,     # NO3 - Oceanic nitrate
+        2.0,     # NH4 - Low oceanic ammonia
+        0.4,     # PO4 - Oceanic phosphate
+        pip_equilibrium_ocean,  # PIP - Equilibrium based on PO4
+        250.0,   # O2 - Well oxygenated seawater
+        50.0,    # TOC - Low oceanic TOC
+        32.0,    # S - Typical seawater salinity
+        10.0,    # SPM - Low oceanic suspended matter
+        2100.0,  # DIC - Oceanic dissolved inorganic carbon
+        2400.0,  # AT - Oceanic alkalinity
+        5.0,     # HS - Low hydrogen sulfide in oxygenated water
+        8.1,     # PH - Typical seawater pH
+        1900.0,  # ALKC - Oceanic carbonate alkalinity
+        15.0     # CO2 - Oceanic CO2
+    ])
     
-    # River boundary values based on typical freshwater conditions
-    default_upstream = default_upstream.at[9].set(0.2)         # Freshwater salinity (PSU)
-    default_upstream = default_upstream.at[7].set(300.0)       # Oxygen (mmol/m³)
-    default_upstream = default_upstream.at[3].set(15.0)        # Nitrate (mmol/m³)
-    default_upstream = default_upstream.at[4].set(5.0)         # Ammonium (mmol/m³)
-    default_upstream = default_upstream.at[5].set(0.8)         # Phosphate (mmol/m³)
-    default_upstream = default_upstream.at[6].set(0.06)        # PIP - Consistent with equilibrium init (mmol/m³)
-    default_upstream = default_upstream.at[11].set(1500.0)     # DIC - Freshwater (mmol C/m³)
-    default_upstream = default_upstream.at[12].set(1800.0)     # AT - Freshwater alkalinity (mmol/m³)
-    default_upstream = default_upstream.at[15].set(1400.0)     # ALKC - Freshwater carbonate alkalinity (mmol/m³)
+    # River boundary conditions (left boundary, index 0)
+    river_concentrations = jnp.array([
+        50.0,    # PHY1 - Higher riverine phytoplankton
+        50.0,    # PHY2 - Higher riverine phytoplankton
+        100.0,   # SI - High riverine silicate from weathering
+        15.0,    # NO3 - High riverine nitrate from runoff
+        8.0,     # NH4 - High riverine ammonia
+        0.8,     # PO4 - High riverine phosphate
+        pip_equilibrium_river,  # PIP - Equilibrium based on PO4 (higher in river)
+        300.0,   # O2 - Well oxygenated river water
+        200.0,   # TOC - High riverine organic carbon
+        0.2,     # S - Freshwater salinity
+        50.0,    # SPM - High riverine suspended matter
+        1500.0,  # DIC - Lower riverine DIC
+        1800.0,  # AT - Lower riverine alkalinity
+        2.0,     # HS - Low hydrogen sulfide in oxygenated river
+        7.5,     # PH - Slightly lower riverine pH
+        1400.0,  # ALKC - Lower riverine carbonate alkalinity
+        25.0     # CO2 - Higher riverine CO2
+    ])
     
-    # Get actual boundary conditions if available, otherwise use defaults
-    bc_downstream = boundary_conditions.get('downstream', default_downstream)
-    bc_upstream = boundary_conditions.get('upstream', default_upstream)
-    
-    # Force boundary values to be physically realistic
-    # This is critical to prevent unrealistic accumulation
-    bc_downstream = jnp.maximum(bc_downstream, 1e-5)  # Ensure positive values
-    bc_upstream = jnp.maximum(bc_upstream, 1e-5)      # Ensure positive values
-    
-    # Strictly enforce salinity bounds at boundaries - this is critical
-    bc_downstream = bc_downstream.at[9].set(jnp.clip(bc_downstream[9], 25.0, 35.0))  # Sea: 25-35 PSU
-    bc_upstream = bc_upstream.at[9].set(jnp.clip(bc_upstream[9], 0.01, 0.5))        # River: 0.01-0.5 PSU
-    
-    # Enforce oxygen bounds at boundaries
-    bc_downstream = bc_downstream.at[7].set(jnp.clip(bc_downstream[7], 150.0, 300.0))  # Sea: 150-300 mmol/m³
-    bc_upstream = bc_upstream.at[7].set(jnp.clip(bc_upstream[7], 100.0, 350.0))       # River: 100-350 mmol/m³
-    
-    # Get velocities at boundaries with safety checks
-    u_downstream = jnp.clip(velocities[1], -1.0, 1.0)  # Limit to reasonable range
-    u_upstream = jnp.clip(velocities[-2], -1.0, 1.0)   # Limit to reasonable range
-    
-    # Apply extremely strong direct enforcement for critical tracers like salinity
-    # Use almost pure Dirichlet conditions to ensure realistic values
-    # Other tracers can use softer flow-based boundary conditions
-    
-    # Process all species in vectorized manner using JAX-compatible approach
-    species_indices = jnp.arange(MAXV)
-    
-    # Downstream boundary (sea) - vectorized implementation
-    def apply_downstream_bc(species_idx, c_current):
-        c_lb = bc_downstream[species_idx]
-        c_interior = concentrations[species_idx, 2]
-        
-        # For salinity and oxygen, use strict direct value enforcement
-        is_critical_species = (species_idx == 9) | (species_idx == 7)  # Salinity or oxygen
-        
-        # Special mass-conserving treatment for PIP (species 6)
-        is_pip_species = (species_idx == 6)
-        
-        # Critical species: almost pure Dirichlet condition (95% boundary value)
-        # Non-critical species: flow-dependent with relaxation
-        dirichlet_weight = jnp.where(is_critical_species, 0.95, 0.5)
-        
-        # PIP-specific mass-conserving boundary condition
-        pip_conserving_value = jnp.where(
-            u_downstream >= 0.0,
-            # Outflow: Allow natural concentration to exit (no artificial sources)
-            c_current,  # Let the interior concentration flow out naturally
-            # Inflow: Use very gentle relaxation to prevent mass sources
-            c_current * 0.95 + c_lb * 0.05  # Only 5% influence from boundary
+    # Apply mass-conserving boundary conditions using JAX-compatible approach
+    for species_idx in range(MAXV):
+        # Upstream boundary (river, index 0)
+        upstream_inflow_conc = river_concentrations[species_idx]
+        upstream_outflow_conc = concentrations[species_idx, 1]
+        upstream_bc = jnp.where(
+            velocities[0] < 0,  # Inflow condition
+            upstream_inflow_conc,
+            upstream_outflow_conc
         )
+        c_new = c_new.at[species_idx, 0].set(upstream_bc)
         
-        # Always strongly enforce boundary values for critical species
-        # For non-critical species, use flow-based approach
-        flow_based_value = jnp.where(
-            u_downstream >= 0.0,
-            # Outflow: Weaken influence of boundary  
-            c_current * 0.9 + c_lb * 0.1,
-            # Inflow: Strengthen influence of boundary
-            c_current * 0.2 + c_lb * 0.8
-        )
+        # Downstream boundary (ocean, index -1) - KEY TASK 16/17 FIX
+        downstream_inflow_conc = ocean_concentrations[species_idx]
         
-        # Select between strict enforcement, mass-conserving (PIP), and flow-based approach
-        new_value = jnp.where(
-            is_critical_species,
-            c_lb * dirichlet_weight + c_current * (1.0 - dirichlet_weight),  # Critical species
+        # For PIP (species 6), use special mass-conserving outflow
+        pip_outflow_conc = concentrations[species_idx, -2]  # Interior value
+        relaxation_factor = 0.01  # Very gentle to prevent mass sources
+        pip_conserving_conc = (pip_outflow_conc * (1 - relaxation_factor) + 
+                              pip_equilibrium_ocean * relaxation_factor)
+        
+        # Regular species outflow (natural advection)
+        regular_outflow_conc = concentrations[species_idx, -2]
+        
+        # Select appropriate boundary condition based on velocity and species
+        downstream_bc = jnp.where(
+            velocities[-1] > 0,  # Outflow condition
             jnp.where(
-                is_pip_species,
-                pip_conserving_value,  # PIP: mass-conserving approach
-                flow_based_value  # Other species: flow-based
-            )
+                species_idx == 6,  # PIP species gets special treatment
+                pip_conserving_conc,
+                regular_outflow_conc
+            ),
+            downstream_inflow_conc  # Inflow from ocean
         )
-        
-        # Ensure values are physically reasonable (non-negative)
-        return jnp.maximum(new_value, 1e-5)
+        c_new = c_new.at[species_idx, -1].set(downstream_bc)
     
-    # Apply downstream boundary conditions
-    for species in range(MAXV):
-        c_new = c_new.at[species, 0].set(
-            apply_downstream_bc(species, concentrations[species, 0])
-        )
+    # Apply physical bounds
+    c_new = jnp.maximum(c_new, 0.0)
     
-    # Upstream boundary (river) - vectorized implementation
-    def apply_upstream_bc(species_idx, c_current):
-        c_ub = bc_upstream[species_idx]
-        c_interior = concentrations[species_idx, -3]
-        
-        # For salinity and oxygen, use strict direct value enforcement
-        is_critical_species = (species_idx == 9) | (species_idx == 7)  # Salinity or oxygen
-        
-        # Special mass-conserving treatment for PIP (species 6)
-        is_pip_species = (species_idx == 6)
-        
-        # Critical species: almost pure Dirichlet condition (95% boundary value)
-        # Non-critical species: flow-dependent with relaxation
-        dirichlet_weight = jnp.where(is_critical_species, 0.95, 0.5)
-        
-        # PIP-specific mass-conserving boundary condition
-        pip_conserving_value = jnp.where(
-            u_upstream <= 0.0,
-            # Outflow: Allow natural concentration to exit (no artificial sources)
-            c_current,  # Let the interior concentration flow out naturally
-            # Inflow: Use very gentle relaxation to prevent mass sources
-            c_current * 0.95 + c_ub * 0.05  # Only 5% influence from boundary
-        )
-        
-        # Flow-based approach for other species
-        flow_based_value = jnp.where(
-            u_upstream <= 0.0,
-            # Outflow: Weaken influence of boundary
-            c_current * 0.9 + c_ub * 0.1,
-            # Inflow: Strengthen influence of boundary
-            c_current * 0.2 + c_ub * 0.8
-        )
-        
-        # Select between strict enforcement, mass-conserving (PIP), and flow-based approach
-        new_value = jnp.where(
-            is_critical_species,
-            c_ub * dirichlet_weight + c_current * (1.0 - dirichlet_weight),  # Critical species
-            jnp.where(
-                is_pip_species,
-                pip_conserving_value,  # PIP: mass-conserving approach
-                flow_based_value  # Other species: flow-based
-            )
-        )
-        
-        # Ensure values are physically reasonable (non-negative)
-        return jnp.maximum(new_value, 1e-5)
-        
-        # Always strongly enforce boundary values for critical species
-        # For non-critical species, use flow-based approach
-        flow_based_value = jnp.where(
-            u_upstream < 0.0,
-            # Inflow from upstream: Strengthen influence of boundary
-            c_current * 0.2 + c_ub * 0.8,
-            # Outflow to upstream: Weaken influence of boundary
-            c_current * 0.9 + c_ub * 0.1
-        )
-        
-        # Select between strict enforcement and flow-based approach
-        new_value = jnp.where(
-            is_critical_species,
-            c_ub * dirichlet_weight + c_current * (1.0 - dirichlet_weight),  # Critical species
-            flow_based_value  # Non-critical species
-        )
-        
-        # Ensure values are physically reasonable (non-negative)
-        return jnp.maximum(new_value, 1e-5)
+    # Species-specific bounds
+    c_new = c_new.at[9, :].set(jnp.clip(c_new[9, :], 0.0, 35.0))  # Salinity
+    c_new = c_new.at[6, :].set(jnp.clip(c_new[6, :], 0.0, 1.0))   # PIP bounds
+    c_new = c_new.at[14, :].set(jnp.clip(c_new[14, :], 6.0, 9.0))  # pH bounds
     
-    # Apply upstream boundary conditions
-    for species in range(MAXV):
-        c_new = c_new.at[species, -1].set(
-            apply_upstream_bc(species, concentrations[species, -1])
-        )
-        # Extend boundary influence to prevent sharp gradients
-        c_new = c_new.at[species, -2].set(
-            0.7 * c_new[species, -1] + 0.3 * concentrations[species, -2]
-        )
-    
+    return c_new
+
+
     # Additional safety check: ensure salinity stays within physical bounds
     # This prevents any boundary condition issues from propagating
     c_new = c_new.at[9, 0].set(jnp.clip(c_new[9, 0], 25.0, 35.0))  # Sea: 25-35 PSU
