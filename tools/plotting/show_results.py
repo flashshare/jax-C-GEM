@@ -529,7 +529,7 @@ def save_plots(fig, data, quiet=False):
         fig.savefig(filename, dpi=300, bbox_inches='tight')
         
         if not quiet:
-            print(f"� Plots saved: {filename}")
+            print(f"Plots saved: {filename}")
             
     except Exception as e:
         if not quiet:

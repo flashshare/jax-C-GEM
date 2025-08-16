@@ -254,7 +254,7 @@ def apply_boundary_conditions_transport(concentrations: jnp.ndarray,
     default_downstream = default_downstream.at[3].set(5.0)     # Nitrate (mmol/m³)
     default_downstream = default_downstream.at[4].set(2.0)     # Ammonium (mmol/m³)
     default_downstream = default_downstream.at[5].set(0.5)     # Phosphate (mmol/m³)
-    default_downstream = default_downstream.at[6].set(2.0)     # PIP - Particulate inorganic P (mmol/m³)
+    default_downstream = default_downstream.at[6].set(0.02)     # PIP - Consistent with equilibrium init (mmol/m³)
     default_downstream = default_downstream.at[11].set(2100.0)  # DIC - Typical seawater (mmol C/m³)
     default_downstream = default_downstream.at[12].set(2400.0)  # AT - Typical seawater alkalinity (mmol/m³)
     default_downstream = default_downstream.at[15].set(1900.0)  # ALKC - Carbonate alkalinity (mmol/m³)
@@ -265,7 +265,7 @@ def apply_boundary_conditions_transport(concentrations: jnp.ndarray,
     default_upstream = default_upstream.at[3].set(15.0)        # Nitrate (mmol/m³)
     default_upstream = default_upstream.at[4].set(5.0)         # Ammonium (mmol/m³)
     default_upstream = default_upstream.at[5].set(0.8)         # Phosphate (mmol/m³)
-    default_upstream = default_upstream.at[6].set(5.0)         # PIP - Particulate inorganic P (mmol/m³)
+    default_upstream = default_upstream.at[6].set(0.06)        # PIP - Consistent with equilibrium init (mmol/m³)
     default_upstream = default_upstream.at[11].set(1500.0)     # DIC - Freshwater (mmol C/m³)
     default_upstream = default_upstream.at[12].set(1800.0)     # AT - Freshwater alkalinity (mmol/m³)
     default_upstream = default_upstream.at[15].set(1400.0)     # ALKC - Freshwater carbonate alkalinity (mmol/m³)
@@ -306,9 +306,21 @@ def apply_boundary_conditions_transport(concentrations: jnp.ndarray,
         # For salinity and oxygen, use strict direct value enforcement
         is_critical_species = (species_idx == 9) | (species_idx == 7)  # Salinity or oxygen
         
+        # Special mass-conserving treatment for PIP (species 6)
+        is_pip_species = (species_idx == 6)
+        
         # Critical species: almost pure Dirichlet condition (95% boundary value)
         # Non-critical species: flow-dependent with relaxation
         dirichlet_weight = jnp.where(is_critical_species, 0.95, 0.5)
+        
+        # PIP-specific mass-conserving boundary condition
+        pip_conserving_value = jnp.where(
+            u_downstream >= 0.0,
+            # Outflow: Allow natural concentration to exit (no artificial sources)
+            c_current,  # Let the interior concentration flow out naturally
+            # Inflow: Use very gentle relaxation to prevent mass sources
+            c_current * 0.95 + c_lb * 0.05  # Only 5% influence from boundary
+        )
         
         # Always strongly enforce boundary values for critical species
         # For non-critical species, use flow-based approach
@@ -320,11 +332,15 @@ def apply_boundary_conditions_transport(concentrations: jnp.ndarray,
             c_current * 0.2 + c_lb * 0.8
         )
         
-        # Select between strict enforcement and flow-based approach
+        # Select between strict enforcement, mass-conserving (PIP), and flow-based approach
         new_value = jnp.where(
             is_critical_species,
             c_lb * dirichlet_weight + c_current * (1.0 - dirichlet_weight),  # Critical species
-            flow_based_value  # Non-critical species
+            jnp.where(
+                is_pip_species,
+                pip_conserving_value,  # PIP: mass-conserving approach
+                flow_based_value  # Other species: flow-based
+            )
         )
         
         # Ensure values are physically reasonable (non-negative)
@@ -344,9 +360,44 @@ def apply_boundary_conditions_transport(concentrations: jnp.ndarray,
         # For salinity and oxygen, use strict direct value enforcement
         is_critical_species = (species_idx == 9) | (species_idx == 7)  # Salinity or oxygen
         
+        # Special mass-conserving treatment for PIP (species 6)
+        is_pip_species = (species_idx == 6)
+        
         # Critical species: almost pure Dirichlet condition (95% boundary value)
         # Non-critical species: flow-dependent with relaxation
         dirichlet_weight = jnp.where(is_critical_species, 0.95, 0.5)
+        
+        # PIP-specific mass-conserving boundary condition
+        pip_conserving_value = jnp.where(
+            u_upstream <= 0.0,
+            # Outflow: Allow natural concentration to exit (no artificial sources)
+            c_current,  # Let the interior concentration flow out naturally
+            # Inflow: Use very gentle relaxation to prevent mass sources
+            c_current * 0.95 + c_ub * 0.05  # Only 5% influence from boundary
+        )
+        
+        # Flow-based approach for other species
+        flow_based_value = jnp.where(
+            u_upstream <= 0.0,
+            # Outflow: Weaken influence of boundary
+            c_current * 0.9 + c_ub * 0.1,
+            # Inflow: Strengthen influence of boundary
+            c_current * 0.2 + c_ub * 0.8
+        )
+        
+        # Select between strict enforcement, mass-conserving (PIP), and flow-based approach
+        new_value = jnp.where(
+            is_critical_species,
+            c_ub * dirichlet_weight + c_current * (1.0 - dirichlet_weight),  # Critical species
+            jnp.where(
+                is_pip_species,
+                pip_conserving_value,  # PIP: mass-conserving approach
+                flow_based_value  # Other species: flow-based
+            )
+        )
+        
+        # Ensure values are physically reasonable (non-negative)
+        return jnp.maximum(new_value, 1e-5)
         
         # Always strongly enforce boundary values for critical species
         # For non-critical species, use flow-based approach
@@ -697,6 +748,27 @@ def transport_step(transport_state: TransportState,
     
     # Ensure concentrations remain physically realistic after advection
     c_after_advection = jnp.maximum(c_after_advection, 0.0)
+    
+    # Special treatment for salinity gradients to reduce sign changes
+    # Apply gentle spatial smoothing to prevent unrealistic oscillations
+    def apply_salinity_smoothing(salinity_field):
+        """Apply spatial smoothing to salinity to reduce gradient oscillations."""
+        # Use a simple 3-point moving average with low smoothing strength
+        smoothing_strength = 0.05  # Very gentle smoothing (5%)
+        
+        # Apply smoothing to interior points only (preserve boundaries)
+        salinity_smoothed = salinity_field.at[1:-1].set(
+            salinity_field[1:-1] * (1.0 - 2 * smoothing_strength) +
+            salinity_field[:-2] * smoothing_strength +
+            salinity_field[2:] * smoothing_strength
+        )
+        return salinity_smoothed
+    
+    # Apply salinity smoothing (species index 9)
+    c_after_advection = c_after_advection.at[9].set(
+        apply_salinity_smoothing(c_after_advection[9])
+    )
+    
     c_after_advection = c_after_advection.at[9].set(jnp.clip(c_after_advection[9], 0.01, 35.0))  # Salinity
     c_after_advection = c_after_advection.at[7].set(jnp.clip(c_after_advection[7], 1.0, 350.0))  # Oxygen
     
@@ -927,8 +999,22 @@ def create_initial_transport_state(model_config: Dict[str, Any]) -> TransportSta
     concentrations = concentrations.at[4].set(nh4_profile)  # NH4
     concentrations = concentrations.at[5].set(po4_profile)  # PO4
     
-    # Particulate inorganic phosphorus - typically associated with SPM
-    pip_profile = 0.05 + 0.2 * fresh_norm
+    # === CRITICAL FIX: EQUILIBRIUM-BASED PIP INITIALIZATION ===
+    # PIP mass loss was due to initialization with high boundary values that create artificial sources
+    # Initialize PIP in equilibrium with PO4 based on typical estuarine chemistry
+    
+    # PIP should be much lower than boundary values to prevent mass sources
+    # Use typical PIP:PO4 equilibrium ratios observed in estuarine systems
+    pip_equilibrium_ratio = 0.08  # Typical 5-15% of PO4 as PIP
+    pip_base = po4_profile * pip_equilibrium_ratio
+    
+    # Add slight spatial variation but keep values realistic and low
+    pip_spatial_factor = 1.0 + 0.3 * jnp.sin(jnp.pi * s_norm)  # ±30% spatial variation
+    pip_profile = pip_base * pip_spatial_factor
+    
+    # Ensure PIP stays well below boundary values that were causing mass sources
+    pip_profile = jnp.clip(pip_profile, 0.01, 0.08)  # Much lower than 0.1-0.2 boundary values
+    
     concentrations = concentrations.at[6].set(pip_profile)  # PIP
     
     # Oxygen - typically higher in ocean water and lower upstream
