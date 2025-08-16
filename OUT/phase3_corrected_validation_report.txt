@@ -1,0 +1,60 @@
+# CORRECTED PHASE 3 VALIDATION REPORT: Seasonal Cycles
+============================================================
+Generated: 2025-08-16 18:23:21
+
+## Coordinate and Temporal Correction
+
+CRITICAL FIXES:
+- Proper station coordinate mapping (field km → model km)
+- Correct temporal alignment with 2017 calendar year
+- Monthly aggregation with proper date parsing
+
+## Station Mapping
+
+- PC (Phu Cuong): 86km → 116km (grid 58)
+- BD (Ben Do): 130km → 72km (grid 36)
+- BK (Binh Khanh): 156km → 46km (grid 23)
+
+## Validation Metrics Summary
+
+| Station | Variable | RMSE | Correlation | N Months | Model Mean | Field Mean |
+|---------|----------|------|-------------|----------|------------|------------|
+| PC | S | 17.293 | nan | 9 | 17.29 | 0.00 |
+| PC | O2 | 167.505 | -0.052 | 9 | 169.83 | 2.41 |
+| PC | NH4 | 48.639 | 0.154 | 9 | 48.85 | 0.24 |
+| PC | NO3 | 96.995 | 0.043 | 9 | 97.49 | 0.54 |
+| PC | PO4 | 4.854 | 0.015 | 9 | 4.88 | 0.03 |
+| PC | TOC | 481.900 | 0.009 | 9 | 486.48 | 4.80 |
+| BD | S | 17.003 | 0.008 | 9 | 17.38 | 0.38 |
+| BD | O2 | 167.433 | -0.069 | 9 | 169.42 | 2.05 |
+| BD | NH4 | 48.207 | -0.187 | 9 | 48.78 | 0.59 |
+| BD | NO3 | 96.621 | -0.174 | 9 | 97.32 | 0.74 |
+| BD | PO4 | 4.836 | -0.130 | 9 | 4.88 | 0.04 |
+| BD | TOC | 478.411 | -0.387 | 9 | 485.49 | 7.30 |
+| BK | S | 17.481 | 0.432 | 9 | 18.91 | 1.47 |
+| BK | O2 | 185.319 | -0.159 | 9 | 188.90 | 3.65 |
+| BK | NH4 | 54.371 | -0.247 | 9 | 54.43 | 0.08 |
+| BK | NO3 | 107.973 | -0.368 | 9 | 108.61 | 0.68 |
+| BK | PO4 | 5.410 | 0.185 | 9 | 5.44 | 0.03 |
+| BK | TOC | 537.845 | 0.104 | 9 | 541.69 | 4.04 |
+
+## Critical Assessment
+
+### Overall Performance
+- Total comparisons: 18
+- Good correlations (r > 0.5): 0
+- Success rate: 0.0%
+
+❌ **MODEL VALIDATION FAILED**
+
+Critical Issues:
+- Poor correlation with field observations
+- Large RMSE values indicate systematic bias
+- Seasonal patterns do not match observations
+
+## Immediate Actions Required
+
+1. **Boundary Condition Review**: Check upstream/downstream inputs
+2. **Parameter Calibration**: Biogeochemical parameters need optimization
+3. **Temporal Dynamics**: Verify seasonal forcing data
+4. **Spatial Resolution**: Consider higher resolution near stations
