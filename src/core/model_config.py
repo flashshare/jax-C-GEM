@@ -97,3 +97,25 @@ DEFAULT_BIO_PARAMS = {
     # Other parameters
     'anaerobic_factor': 0.1,  # Relative rate of anaerobic vs aerobic degradation
 }
+
+# Species physical bounds [min, max] for numerical stability
+# These values represent scientifically reasonable ranges for each species
+DEFAULT_SPECIES_BOUNDS = {
+    'PHY1': [0.0, 100.0],    # Diatoms [mmol C/m³]
+    'PHY2': [0.0, 100.0],    # Non-diatoms [mmol C/m³]
+    'SI': [0.0, 500.0],      # Silica [mmol Si/m³]
+    'NO3': [0.0, 200.0],     # Nitrate [mmol N/m³]
+    'NH4': [0.0, 100.0],     # Ammonium [mmol N/m³]
+    'PO4': [0.0, 10.0],      # Phosphate [mmol P/m³]
+    'PIP': [0.0, 50.0],      # Particulate P [mmol P/m³]
+    'O2': [0.0, 500.0],      # Oxygen [mmol O2/m³]
+    'TOC': [0.0, 1000.0],    # Organic carbon [mmol C/m³]
+    'S': [0.0, 35.0],        # Salinity [PSU]
+    'SPM': [0.0, 1000.0],    # Suspended matter [mg/L]
+    'DIC': [0.0, 5000.0],    # Dissolved CO2 [mmol C/m³]
+    'AT': [0.0, 5000.0],     # Total alkalinity [mmol/m³]
+    'HS': [0.0, 100.0],      # Hydrogen sulfide [mmol S/m³]
+    'PH': [6.0, 9.0],        # pH units
+    'ALKC': [0.0, 5000.0],   # Carbonate alkalinity [mmol/m³]
+    'CO2': [0.0, 1000.0]     # Carbon dioxide [mmol C/m³]
+}

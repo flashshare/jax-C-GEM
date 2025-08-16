@@ -6,7 +6,7 @@ import jax
 import jax.numpy as jnp
 from jax import lax
 from typing import Dict, Any, Tuple, NamedTuple
-from .model_config import G, PI, MAXV
+from .model_config import G, PI, MAXV, DEFAULT_SPECIES_BOUNDS, SPECIES_NAMES
 
 @jax.jit
 def check_mass_conservation(old_conc: jnp.ndarray, new_conc: jnp.ndarray, 
@@ -47,32 +47,31 @@ def safe_divide_transport(numerator: jnp.ndarray, denominator: jnp.ndarray, epsi
     return numerator / jnp.maximum(jnp.abs(denominator), epsilon) * jnp.sign(denominator)
 
 
+def get_default_species_bounds() -> jnp.ndarray:
+    """Get default species bounds from configuration."""
+    bounds_list = []
+    for species_name in SPECIES_NAMES:
+        if species_name in DEFAULT_SPECIES_BOUNDS:
+            bounds_list.append(DEFAULT_SPECIES_BOUNDS[species_name])
+        else:
+            # Fallback bounds if species not found
+            bounds_list.append([0.0, 1000.0])
+    return jnp.array(bounds_list)
+
 @jax.jit
 def enforce_concentration_bounds(concentrations: jnp.ndarray) -> jnp.ndarray:
     """
-    Enforce physical bounds on all species concentrations.
-    Critical safety function for numerical stability.
+    Enforce physical bounds on species concentrations to prevent unrealistic values.
+    Uses bounds from model configuration for better maintainability.
+    
+    Args:
+        concentrations: Species concentrations array [MAXV, M]
+        
+    Returns:
+        Bounded concentrations array
     """
-    # Physical bounds for all 17 species [min, max]
-    bounds = jnp.array([
-        [0.0, 100.0],    # PHY1 - Diatoms [mmol C/m³]
-        [0.0, 100.0],    # PHY2 - Non-diatoms [mmol C/m³]
-        [0.0, 500.0],    # SI - Silica [mmol Si/m³]
-        [0.0, 200.0],    # NO3 - Nitrate [mmol N/m³]
-        [0.0, 100.0],    # NH4 - Ammonium [mmol N/m³]
-        [0.0, 10.0],     # PO4 - Phosphate [mmol P/m³]
-        [0.0, 50.0],     # PIP - Particulate P [mmol P/m³]
-        [0.0, 500.0],    # O2 - Oxygen [mmol O2/m³]
-        [0.0, 1000.0],   # TOC - Organic carbon [mmol C/m³]
-        [0.0, 35.0],     # S - Salinity [PSU]
-        [0.0, 1000.0],   # SPM - Suspended matter [mg/L]
-        [0.0, 5000.0],   # DIC - Dissolved CO2 [mmol C/m³]
-        [0.0, 5000.0],   # AT - Total alkalinity [mmol/m³]
-        [0.0, 100.0],    # HS - Hydrogen sulfide [mmol S/m³]
-        [6.0, 9.0],      # pH - pH units
-        [0.0, 5000.0],   # ALKC - Carbonate alkalinity [mmol/m³]
-        [0.0, 1000.0]    # CO2 - Carbon dioxide [mmol C/m³]
-    ])
+    # Get bounds from configuration
+    bounds = get_default_species_bounds()
     
     # Apply bounds to each species
     for i in range(MAXV):

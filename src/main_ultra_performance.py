@@ -22,74 +22,50 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+# Import shared utilities
+from core.main_utils import (
+    create_argument_parser, print_header, load_configurations,
+    analyze_simulation_parameters, select_optimal_output_format,
+    print_performance_summary, handle_simulation_error,
+    initialize_jax, validate_runtime_environment
+)
+
+# JAX imports (needed for simulation logic)
 try:
     import jax
     import jax.numpy as jnp
-    print("🔧 JAX initialized - Ultra-Performance Mode")
-except ImportError as e:
-    print(f"❌ JAX import failed: {e}")
-    sys.exit(1)
+except ImportError:
+    # Will be handled by initialize_jax()
+    pass
 
 def main():
+    # Validate runtime environment
+    if not validate_runtime_environment():
+        return 1
+    
+    # Initialize JAX
+    if not initialize_jax():
+        return 1
+    
+    # Parse arguments with ultra mode
     import argparse
-    
-    parser = argparse.ArgumentParser(description='JAX C-GEM - Ultra-Performance Mode')
-    parser.add_argument('--mode', choices=['run'], default='run', help='Execution mode')
-    parser.add_argument('--output-format', choices=['csv', 'npz', 'auto'], default='auto', 
-                       help='Output format (auto=choose based on simulation length)')
-    parser.add_argument('--no-physics-check', action='store_true',
-                       help='Disable physics validation for maximum speed')
-    parser.add_argument('--debug', action='store_true', help='Enable debug output')
-    parser.add_argument('--config', default='config/model_config.txt', 
-                       help='Configuration file to use')
-    
+    parser = create_argument_parser("ultra")
     args = parser.parse_args()
     
-    print("🚀 JAX C-GEM Ultra-Performance Mode")
-    print("=" * 50)
-    print("🔥 Performance Optimizations Active:")
-    print("   ✅ Dictionary creation bottleneck eliminated")
-    print("   ✅ JIT-compiled combined simulation step")
-    print("   ✅ Memory access pattern optimization")
-    print("   ✅ Reduced I/O overhead")
-    print("   ✅ Direct array operations")
-    print("   🔬 Scientific accuracy: 100% preserved")
+    # Print header with ultra mode
+    print_header("ultra")
     
     total_start = time.time()
     
     try:
-        # Load configuration - minimal imports
-        from core.config_parser import parse_model_config, parse_input_data_config
-        from core.data_loader import DataLoader
+        # Load configurations using shared utility
+        model_config, data_config, data_loader = load_configurations(args.config)
         
-        print("\n📋 Loading configuration...")
-        config_start = time.time()
+        # Analyze simulation parameters
+        analysis = analyze_simulation_parameters(model_config)
         
-        model_config = parse_model_config(args.config)
-        data_config = parse_input_data_config('config/input_data_config.txt')
-        data_loader = DataLoader(data_config)
-        
-        config_time = time.time() - config_start
-        print(f"✅ Configuration loaded in {config_time:.1f}s")
-        
-        # Simulation analysis
-        total_days = model_config.get('MAXT', 0)
-        warmup_days = model_config.get('WARMUP', 0)
-        output_days = total_days - warmup_days
-        expected_outputs = output_days * 48  # 30-min intervals
-        
-        print(f"\n📊 Simulation:")
-        print(f"   Total days: {total_days}")
-        print(f"   Output days: {output_days}")
-        print(f"   Expected outputs: {expected_outputs:,}")
-        
-        # Choose format based on size
-        if expected_outputs > 1000:
-            output_format = 'npz'
-            print("⚡ Using NPZ format for efficiency")
-        else:
-            output_format = 'csv'
-            print("📄 Using CSV format for compatibility")
+        # Select optimal output format
+        output_format = select_optimal_output_format(args.output_format, analysis['expected_outputs'])
         
         # Run ultra-performance simulation
         success = run_ultra_performance_simulation(model_config, data_config, data_loader, args, output_format)
@@ -98,11 +74,11 @@ def main():
             print("❌ Simulation failed")
             return 1
             
+        # Print performance summary
         total_time = time.time() - total_start
-        print(f"\n🎉 Total execution time: {total_time:.1f} seconds")
-        print("✅ JAX C-GEM Ultra-Performance completed successfully")
+        print_performance_summary(total_time, "ultra")
         
-        # Performance summary
+        # Performance metrics
         steps_per_minute = 223200 * 60 / (total_time - 5)  # Subtract 5s for setup
         print(f"🏆 Final Performance: {steps_per_minute:,.0f} steps/minute")
         if steps_per_minute > 15000:
@@ -137,11 +113,7 @@ def main():
         return 0
         
     except Exception as e:
-        print(f"❌ Error: {e}")
-        if args.debug:
-            import traceback
-            traceback.print_exc()
-        return 1
+        return handle_simulation_error(e, "ultra")
 
 def run_ultra_performance_simulation(model_config, data_config, data_loader, args, output_format):
     """Run JAX C-GEM simulation with ultra-performance optimizations."""
@@ -225,11 +197,13 @@ def run_ultra_performance_simulation(model_config, data_config, data_loader, arg
             print("❌ Simulation returned no results")
             return False
         
-        # Save results in optimal format
+        # Save results using centralized result writer
+        from core.result_writer import save_results_as_npz, save_results_as_csv
+        
         if output_format == 'npz':
-            save_results_npz(results)
+            save_results_as_npz(results)
         else:
-            save_results_csv(results)
+            save_results_as_csv(results)
         
         # Automatic results visualization
         try:
@@ -266,7 +240,8 @@ def run_ultra_performance_simulation(model_config, data_config, data_loader, arg
             traceback.print_exc()
         return False
 
-def save_results_npz(results):
+if __name__ == "__main__":
+    sys.exit(main())
     """Save results in NPZ format."""
     try:
         import numpy as np

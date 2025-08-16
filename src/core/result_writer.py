@@ -61,11 +61,24 @@ def save_results_as_npz(results: Dict[str, Any], output_dir: str = "OUT"):
     
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
-    
-    # Convert time array
-    time_array = np.array(results['time'])
-    
-    # Convert hydrodynamic data
+
+    # Extract time data from results structure
+    if 'time' in results:
+        time_array = np.array(results['time'])
+    elif 'hydro' in results and 'time' in results['hydro']:
+        time_array = np.array(results['hydro']['time'])
+    else:
+        print("⚠️ Warning: No time data found in results")
+        # Create default time array
+        if 'hydro' in results and len(results['hydro']) > 0:
+            first_var = list(results['hydro'].values())[0]
+            if hasattr(first_var, 'shape') and len(first_var.shape) > 0:
+                n_time = first_var.shape[0] if len(first_var.shape) > 1 else len(first_var)
+            else:
+                n_time = len(first_var)
+        else:
+            n_time = 100
+        time_array = np.arange(n_time) / 48.0  # Assuming 30-min intervals    # Convert hydrodynamic data
     print("  ⏩ Processing hydrodynamic data...")
     hydro_data = {}
     for var_name, var_list in results['hydro'].items():
@@ -181,8 +194,23 @@ def save_results_as_csv(results: Dict[str, Any], output_dir: str = "OUT"):
     os.makedirs(f"{output_dir}/Hydrodynamics", exist_ok=True)
     os.makedirs(f"{output_dir}/Reaction", exist_ok=True)
     
-    # Convert time to numpy array (days)
-    time_days = np.array(results['time'])
+    # Extract time data from results structure
+    if 'time' in results:
+        time_days = np.array(results['time'])
+    elif 'hydro' in results and 'time' in results['hydro']:
+        time_days = np.array(results['hydro']['time'])
+    else:
+        print("⚠️ Warning: No time data found in results")
+        # Create default time array
+        if 'hydro' in results and len(results['hydro']) > 0:
+            first_var = list(results['hydro'].values())[0]
+            if hasattr(first_var, 'shape') and len(first_var.shape) > 0:
+                n_time = first_var.shape[0] if len(first_var.shape) > 1 else len(first_var)
+            else:
+                n_time = len(first_var)
+        else:
+            n_time = 100
+        time_days = np.arange(n_time) / 48.0  # Assuming 30-min intervals
     
     # Save hydrodynamic variables
     hydro_vars = ['H', 'U', 'D', 'PROF']
