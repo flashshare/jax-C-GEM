@@ -3,7 +3,7 @@ JAX C-GEM Simulation Statistics
 Simulation duration: 2591820.00 days
 Time steps: 961
 Grid points: 102
-Created: 2025-08-16 15:18:14
+Created: 2025-08-16 15:35:27
 
 Variable Ranges:
 --------------------
@@ -25,5 +25,5 @@ DIC: [1.000000e+02, 5.000000e+03]
 AT: [5.000000e+02, 5.000000e+03]
 HS: [1.000000e-12, 1.000000e+02]
 PH: [6.000000e+00, 9.000000e+00]
-ALKC: [0.000000e+00, 4.999931e+03]
+ALKC: [0.000000e+00, 4.999533e+03]
 CO2: [1.000000e+00, 1.000000e+02]

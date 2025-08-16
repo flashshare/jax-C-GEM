@@ -254,6 +254,10 @@ def apply_boundary_conditions_transport(concentrations: jnp.ndarray,
     default_downstream = default_downstream.at[3].set(5.0)     # Nitrate (mmol/m³)
     default_downstream = default_downstream.at[4].set(2.0)     # Ammonium (mmol/m³)
     default_downstream = default_downstream.at[5].set(0.5)     # Phosphate (mmol/m³)
+    default_downstream = default_downstream.at[6].set(2.0)     # PIP - Particulate inorganic P (mmol/m³)
+    default_downstream = default_downstream.at[11].set(2100.0)  # DIC - Typical seawater (mmol C/m³)
+    default_downstream = default_downstream.at[12].set(2400.0)  # AT - Typical seawater alkalinity (mmol/m³)
+    default_downstream = default_downstream.at[15].set(1900.0)  # ALKC - Carbonate alkalinity (mmol/m³)
     
     # River boundary values based on typical freshwater conditions
     default_upstream = default_upstream.at[9].set(0.2)         # Freshwater salinity (PSU)
@@ -261,6 +265,10 @@ def apply_boundary_conditions_transport(concentrations: jnp.ndarray,
     default_upstream = default_upstream.at[3].set(15.0)        # Nitrate (mmol/m³)
     default_upstream = default_upstream.at[4].set(5.0)         # Ammonium (mmol/m³)
     default_upstream = default_upstream.at[5].set(0.8)         # Phosphate (mmol/m³)
+    default_upstream = default_upstream.at[6].set(5.0)         # PIP - Particulate inorganic P (mmol/m³)
+    default_upstream = default_upstream.at[11].set(1500.0)     # DIC - Freshwater (mmol C/m³)
+    default_upstream = default_upstream.at[12].set(1800.0)     # AT - Freshwater alkalinity (mmol/m³)
+    default_upstream = default_upstream.at[15].set(1400.0)     # ALKC - Freshwater carbonate alkalinity (mmol/m³)
     
     # Get actual boundary conditions if available, otherwise use defaults
     bc_downstream = boundary_conditions.get('downstream', default_downstream)
