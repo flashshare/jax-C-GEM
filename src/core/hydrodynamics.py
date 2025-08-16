@@ -408,15 +408,22 @@ def update_variables(TH: jnp.ndarray, TU: jnp.ndarray, solution: jnp.ndarray,
         dH_dx = (TH_new[i+1] - TH_new[i-1]) / (2.0 * DELXI)
         pressure_gradient = -G * dH_dx
         
-        # AGGRESSIVE: Ultra-low friction for maximum tidal velocities  
-        # Tidal estuaries can have very low friction coefficients in deep channels
-        chezy = 250.0  # Very high Chezy coefficient = ultra-low friction
-        hydraulic_radius = 20.0  # Very deep channel assumption
+        # CORRECTED: Use realistic friction coefficients from configuration
+        # Standard Saint-Venant friction formula: τ = g*|U|*U / (C²*R)
+        # where C is Chezy coefficient, R is hydraulic radius
         
-        # Friction term (now much smaller)
+        # Use realistic Chezy coefficients (uniform across domain for simplicity)
+        # Later this will be properly segmented using configured values
+        chezy_val = 55.0  # Average of Chezy1=60.0 and Chezy2=50.0 from model_config.txt
+        
+        # Calculate hydraulic radius (simplified for 1D: approximated by water depth)
+        # Use minimum depth to avoid excessive friction
+        hydraulic_radius = 5.0  # Typical estuary depth assumption
+        
+        # Correct friction formula: τ = g * |U| * U / (C² * R)
         vel_magnitude = jnp.abs(TU_safe[i])
-        friction_coefficient = G * vel_magnitude / (chezy * chezy * hydraulic_radius)
-        friction_term = -friction_coefficient * TU_safe[i]
+        friction_coefficient = G / (chezy_val * chezy_val * hydraulic_radius)
+        friction_term = -friction_coefficient * vel_magnitude * TU_safe[i]
         
         # REFINED TIDAL MOMENTUM EQUATION
         # Balance between strong tidal response and realistic physics
@@ -433,16 +440,7 @@ def update_variables(TH: jnp.ndarray, TU: jnp.ndarray, solution: jnp.ndarray,
         nonlinear_amplifier = 1.0 + 500000.0 * pressure_magnitude  # Reduced from 5M to 500K
         enhanced_pressure_gradient = base_pressure_gradient * nonlinear_amplifier * tidal_momentum_factor
         
-        # Reduced friction for tidal flow
-        chezy = 150.0  # High but realistic Chezy coefficient
-        hydraulic_radius = 15.0  # Deep tidal channel
-        
-        # Standard friction calculation
-        vel_magnitude = jnp.abs(TU_safe[i])
-        friction_coefficient = G * vel_magnitude / (chezy * chezy * hydraulic_radius)
-        friction_term = -0.5 * friction_coefficient * TU_safe[i]  # Moderate friction reduction
-        
-        # Total acceleration with refined enhancements
+        # Total acceleration with corrected friction
         dU_dt = enhanced_pressure_gradient + friction_term
         
         # Realistic tidal acceleration limits
@@ -473,8 +471,11 @@ def update_variables(TH: jnp.ndarray, TU: jnp.ndarray, solution: jnp.ndarray,
                                            nonlinear_amplifier_downstream * tidal_momentum_factor)
     
     vel_magnitude_downstream = jnp.abs(TU_safe[0])
-    friction_coefficient_downstream = G * vel_magnitude_downstream / (150.0 * 150.0 * 15.0)  # Refined friction
-    friction_term_downstream = -0.5 * friction_coefficient_downstream * TU_safe[0]  # Moderate friction reduction
+    # CORRECTED: Use proper friction formula with configured Chezy coefficient (segment 1)
+    chezy_downstream = 60.0  # From model_config.txt
+    hydraulic_radius_downstream = 5.0  # Typical estuary depth
+    friction_coefficient_downstream = G / (chezy_downstream * chezy_downstream * hydraulic_radius_downstream)
+    friction_term_downstream = -friction_coefficient_downstream * vel_magnitude_downstream * TU_safe[0]
     
     dU_dt_downstream = enhanced_pressure_gradient_downstream + friction_term_downstream
     dU_dt_downstream = jnp.clip(dU_dt_downstream, -3.0, 3.0)  # Realistic acceleration limit
@@ -494,8 +495,11 @@ def update_variables(TH: jnp.ndarray, TU: jnp.ndarray, solution: jnp.ndarray,
                                                   nonlinear_amplifier_near_upstream * tidal_momentum_factor)
         
         vel_magnitude_near_upstream = jnp.abs(TU_safe[M-2])
-        friction_coefficient_near_upstream = G * vel_magnitude_near_upstream / (150.0 * 150.0 * 15.0)
-        friction_term_near_upstream = -0.5 * friction_coefficient_near_upstream * TU_safe[M-2]
+        # CORRECTED: Use proper friction formula with configured Chezy coefficient (segment 2)
+        chezy_near_upstream = 50.0  # From model_config.txt
+        hydraulic_radius_near_upstream = 5.0  # Typical estuary depth
+        friction_coefficient_near_upstream = G / (chezy_near_upstream * chezy_near_upstream * hydraulic_radius_near_upstream)
+        friction_term_near_upstream = -friction_coefficient_near_upstream * vel_magnitude_near_upstream * TU_safe[M-2]
         
         dU_dt_near_upstream = enhanced_pressure_gradient_near_upstream + friction_term_near_upstream
         dU_dt_near_upstream = jnp.clip(dU_dt_near_upstream, -3.0, 3.0)

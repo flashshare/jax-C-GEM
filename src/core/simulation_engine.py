@@ -108,22 +108,9 @@ def precompute_forcing_data(data_loader, time_array) -> Dict[str, np.ndarray]:
 def run_full_optimized_simulation(model_state: Dict[str, Any]) -> Dict[str, Any]:
     """
     FULL OPTIMIZED simulation with all performance improvements implemented.
-    
-    Performance Optimizations Applied:
-    1. ✅ Pre-computed forcing data (eliminates 650,000+ dictionary lookups)
-    2. ✅ Ultra-optimized JIT-compiled combined step (reduces Python overhead)
-    3. ✅ Pre-allocated dictionaries (eliminates 446,400 dictionary creations)
-    4. ✅ Direct array operations (minimizes conversions)
-    5. ✅ Reduced I/O overhead (2% progress reporting)
-    6. ✅ Memory-efficient output collection
-    
-    Expected Performance: 15,000-20,000 steps/minute (1.5-2x improvement)
-    Scientific Accuracy: 100% preserved - identical results to original
     """
     
     print("🚀 FULL PERFORMANCE-OPTIMIZED JAX C-GEM SIMULATION")
-    print("   🔥 All performance bottlenecks eliminated")
-    print("   🔬 Scientific accuracy: 100% preserved")
     
     # Extract configuration
     simulation_config = model_state['simulation_config']
