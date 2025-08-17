@@ -1,0 +1,85 @@
+TRANSPORT CORRELATION DIAGNOSTIC REPORT
+=======================================================
+
+Analysis Date: 2025-08-17 02:42
+
+PROBLEM SUMMARY:
+- Most species show poor spatial correlation (R² = 0.125-0.367)
+- O₂ shows good correlation (R² = 0.792)
+- Need to understand why O₂ works while others fail
+
+SPECIES PERFORMANCE ANALYSIS:
+
+BOUNDARY CONDITION ANALYSIS:
+   NH4:
+     Upstream: 15.98 ± 5.05
+     Downstream: 16.30 ± 4.49
+   NO3:
+     Upstream: 19.40 ± 4.05
+     Downstream: 48.81 ± 24.52
+   PO4:
+     Upstream: 1.26 ± 0.21
+     Downstream: 1.11 ± 0.44
+   TOC:
+     Upstream: 401.00 ± 150.38
+     Downstream: 312.45 ± 193.55
+   O2:
+     Upstream: 169.55 ± 11.79
+     Downstream: 170.22 ± 11.78
+   S:
+     Upstream: 0.01 ± 0.00
+     Downstream: 25.67 ± 2.45
+   SPM:
+     Upstream: 0.03 ± 0.02
+     Downstream: 0.11 ± 0.04
+
+MASS CONSERVATION ANALYSIS:
+   NH4: Rel. change=0.0025 - GOOD
+   NO3: Rel. change=0.0360 - POOR
+   PO4: Rel. change=0.0411 - POOR
+   TOC: Rel. change=0.0340 - POOR
+   O2: Rel. change=0.0855 - POOR
+   S: Rel. change=0.7326 - POOR
+   SPM: Rel. change=0.7246 - POOR
+
+ROOT CAUSE ANALYSIS:
+
+1. O₂ SUCCESS FACTORS:
+   - May have more realistic boundary conditions
+   - Reaeration provides stabilizing source term
+   - Gas exchange equilibrium helps
+   - Less sensitive to transport numerical errors
+
+2. OTHER SPECIES FAILURE FACTORS:
+   - Boundary condition values may be unrealistic
+   - Dispersion coefficients may be inappropriate
+   - Mass conservation violations
+   - Strong sensitivity to transport errors
+
+RECOMMENDED FIXES:
+
+PRIORITY 1: Boundary condition validation
+   - Verify upstream/downstream values against literature
+   - Check for missing or corrupted boundary files
+   - Compare boundary gradients with field observations
+
+PRIORITY 2: Dispersion coefficient validation
+   - Check if dispersion values are within estuarine range (10-1000 m²/s)
+   - Verify Elder's formula implementation
+   - Test sensitivity to dispersion magnitude
+
+PRIORITY 3: Mass conservation fixes
+   - Identify species with mass violations
+   - Check numerical solver conservation properties
+   - Verify boundary flux calculations
+
+PRIORITY 4: Learn from O₂ success
+   - Extract O₂ boundary condition patterns
+   - Apply O₂ success factors to other species
+   - Test other species with O₂-like boundary conditions
+
+VALIDATION TARGETS:
+- All species R² > 0.6 (currently only O₂ achieves this)
+- Mass conservation error < 1% for all species
+- Realistic boundary condition gradients
+- Dispersion coefficients within 10-1000 m²/s range

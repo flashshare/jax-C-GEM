@@ -1,0 +1,46 @@
+TIDAL OVERESTIMATION DIAGNOSTIC REPORT
+==================================================
+
+Analysis Date: 2025-08-17 02:40
+
+PROBLEM SUMMARY:
+- Model tidal ranges: 5.6-7.5m
+- Field observations: 2.1-3.2m
+- Overestimation factor: 2-3x
+
+ROOT CAUSE ANALYSIS:
+
+1. MANNING FRICTION COEFFICIENT:
+   Current Manning's n: 0.025
+   Typical estuarine range: 0.020-0.035
+   Suggested n for amplitude reduction: 0.062
+
+2. GEOMETRY EFFECTS:
+   - Check cross-sectional areas for realism
+   - High convergence ratio may amplify tides
+   - Verify bathymetry against field surveys
+
+3. BOUNDARY FORCING:
+   - Verify tidal amplitude at mouth (should match field)
+   - Check phase relationships
+   - Validate harmonic constituents
+
+RECOMMENDED FIXES:
+
+PRIORITY 1: Increase Manning friction coefficient
+   - Change Manning's n from 0.025 to 0.062
+   - Test sensitivity to friction values
+
+PRIORITY 2: Validate geometry
+   - Compare cross-sections with field surveys
+   - Check for unrealistic convergence
+   - Verify depth-area relationships
+
+PRIORITY 3: Boundary condition verification
+   - Confirm mouth tidal amplitude matches observations
+   - Check upstream discharge consistency
+
+VALIDATION TARGETS:
+- Tidal range ratio: 0.8-1.2 (currently 2-3x)
+- Phase relationships: Within ±30 minutes
+- Energy dissipation: Consistent with friction
