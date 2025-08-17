@@ -1,10 +1,12 @@
-# JAX C-GEM Calibration Roadmap
-## Post-Physics Repair Status and Future Development Plan
+# JAX C-GEM Physics Debugging Roadmap
+## Comprehensive Model Physics Validation and Repair Plan
 
 ### Executive Summary
-🎯 **Major Milestone Achieved**: Physics repair successfully eliminated numerical instabilities, transforming model from "POOR" to "FAIR" physics status. The model now produces smooth, monotonic estuarine gradients without chaotic oscillations.
+🎯 **Current Status**: While numerical oscillations were eliminated (POOR→FAIR), the 3-phase verification reveals fundamental physics implementation issues that must be resolved before calibration.
 
-🔧 **Next Phase**: Field data calibration to optimize biogeochemical and hydrodynamic parameters for excellent agreement with CEM, SIHYMECC, and CARE observations.
+🔧 **Critical Finding**: Systematic tidal overestimation (2-3x observed) and poor species transport correlations indicate deeper problems in hydrodynamics, transport equations, and boundary conditions rather than parameter values.
+
+�️ **Next Phase**: Comprehensive physics debugging from data loading through mass conservation to ensure mathematical implementation matches intended estuarine physics.
 
 ---
 
@@ -25,204 +27,582 @@
 
 ---
 
-## 📊 3-Phase Verification Results Analysis
+## � Physics Issues Identified from Verification
 
-### Phase 1: Longitudinal Profiles (CEM Field Data)
-**Status**: 🟡 **Partial Success - Calibration Needed**
+### Phase 2 - Tidal Dynamics: **CRITICAL PHYSICS PROBLEMS**
+**Status**: � **Systematic Physics Errors - Not Calibration Issues**
 
-| Species | R² Score | RMSE | MAPE | Status |
-|---------|----------|------|------|--------|
-| O₂      | 0.792    | 2.44 | 38.2% | 🟢 Good |
-| SPM     | 0.367    | 8.21 | 47.8% | 🟡 Fair |
-| S       | 0.260    | 2.85 | 16.7% | 🟡 Fair |
-| PO₄     | 0.284    | 0.04 | 65.2% | 🟡 Fair |
-| NH₄     | 0.203    | 0.21 | 104%  | 🔴 Poor |
-| TOC     | 0.125    | 1.12 | 32.1% | 🔴 Poor |
+| Station | Observed Range (m) | Model Range (m) | Overestimation Factor | Issue Type |
+|---------|-------------------|-----------------|----------------------|------------|
+| PC (86km) | 2.6 | 5.6 | 2.15x | Physics Error |
+| BD (130km) | 3.2 | 7.5 | 2.34x | Physics Error |
+| BK (156km) | 2.1 | 6.8 | 3.24x | Physics Error |
 
-**Key Insights**:
-- Oxygen dynamics show excellent spatial correlation (R²=0.792)
-- Other biogeochemical species require parameter tuning
-- Spatial patterns partially correct, indicating sound underlying physics
+**Root Causes (Not Parameter Issues)**:
+- Hydrodynamic equations may be incorrectly implemented
+- Momentum terms, friction, or geometry calculations flawed
+- Boundary condition forcing incorrect
+- Time stepping or numerical scheme problems
 
-### Phase 2: Tidal Dynamics (SIHYMECC Data)
-**Status**: 🔴 **Systematic Bias - Parameter Tuning Required**
+### Phase 1 - Longitudinal Profiles: **TRANSPORT PHYSICS PROBLEMS**
+**Status**: 🔴 **Transport Implementation Issues**
 
-| Station | Observed Range (m) | Model Range (m) | RMSE (m) | R² |
-|---------|-------------------|-----------------|----------|-----|
-| PC (86km) | 2.6 | 5.6 | 3.8 | 0.434 |
-| BD (130km) | 3.2 | 7.5 | 4.6 | 0.834 |
-| BK (156km) | 2.1 | 6.8 | 4.3 | 0.721 |
+| Species | R² Score | Status | Likely Issue |
+|---------|----------|--------|--------------|
+| O₂      | 0.792    | 🟢 Acceptable | Transport working for O₂ |
+| SPM     | 0.367    | 🔴 Poor | Settling/transport physics |
+| S       | 0.260    | 🔴 Poor | Dispersion calculation |
+| PO₄     | 0.284    | 🔴 Poor | Transport boundary conditions |
+| NH₄     | 0.203    | 🔴 Poor | Source/sink implementation |
+| TOC     | 0.125    | 🔴 Poor | Particulate transport physics |
 
-**Key Issues**:
-- Systematic tidal amplitude overestimation (2-3x observed values)
-- Good temporal correlation at BD station (R²=0.834) indicates correct tidal timing
-- Requires hydrodynamic parameter adjustment (friction coefficients, geometry)
+**Root Causes**:
+- Transport equation implementation errors
+- Mass conservation violations
+- Dispersion coefficient calculation problems
+- Boundary condition application issues
 
-### Phase 3: Seasonal Cycles (CARE Long-term Data)
-**Status**: ⏳ **Insufficient Data - Extended Simulation Needed**
-
-- Current: 35-day simulation (insufficient for seasonal analysis)
-- Required: 365+ days for meaningful seasonal validation
-- Preliminary R²=1.000 misleading due to short time series
+### Phase 3 - Seasonal Cycles: **TEMPORAL COVERAGE LIMITATION**
+**Status**: ⚠️ **Insufficient but Working** (35 days vs 365 needed)
 
 ---
 
-## 🎯 Calibration Roadmap
+## 🎯 Comprehensive Physics Debugging Roadmap
 
-### Priority 1: Biogeochemical Parameter Calibration
-**Target**: Improve longitudinal profile agreement (Phase 1)
+### Phase A: Data Loading and Input Validation (Days 1-2)
 
-#### High Priority Species (Poor Performance)
-1. **NH₄ (R²=0.203)**:
-   - Tune nitrification rates
-   - Adjust sediment exchange coefficients
-   - Optimize tributary loading parameters
+#### A1. Configuration File Validation
+**Objective**: Ensure all input parameters are physically reasonable and consistent
 
-2. **TOC (R²=0.125)**:
-   - Calibrate decomposition rates
-   - Adjust organic matter settling velocities
-   - Optimize bacterial respiration parameters
+**Critical Checks**:
+- [ ] **Geometry Validation**: EL=202km, DELXI=2km → M=102 grid points
+- [ ] **Tidal Forcing**: AMPL=4.43m at mouth - verify against SIHYMECC boundary data
+- [ ] **Time Stepping**: DELTI=180s - check CFL condition for stability
+- [ ] **Physical Constants**: G=9.81, Manning coefficients, dispersion parameters
 
-#### Medium Priority Species (Fair Performance)
-3. **PO₄, S, SPM**: Fine-tune reaction kinetics and transport parameters
+**Implementation**:
+```python
+tools/debugging/validate_input_configuration.py
+```
+- Cross-check model_config.txt against field data ranges
+- Verify CFL condition: DELTI < DELXI / (max velocity + sqrt(g*max depth))
+- Compare boundary forcing with actual field measurements
 
-#### Implementation Strategy
-- Use JAX gradient-based optimization (`jax.grad` + `optimistix`)
-- Multi-objective function weighing spatial profiles and seasonal cycles
-- Bayesian parameter uncertainty quantification
+#### A2. Boundary Data Quality Assessment
+**Objective**: Verify boundary condition data matches field observations
 
-### Priority 2: Hydrodynamic Parameter Tuning
-**Target**: Correct tidal amplitude bias (Phase 2)
+**Critical Checks**:
+- [ ] **Downstream Salinity**: Should be ~35 PSU (seawater)
+- [ ] **Upstream Salinity**: Should be ~0 PSU (freshwater)
+- [ ] **Tidal Amplitude**: Verify against SIHYMECC mouth measurements
+- [ ] **Nutrient Gradients**: Check upstream high / downstream low pattern
 
-#### Key Parameters to Adjust
-1. **Manning's Friction Coefficient**: Reduce excessive tidal amplification
-2. **Cross-sectional Geometry**: Verify bathymetry accuracy
-3. **Boundary Forcing**: Check upstream/downstream tidal inputs
-4. **Dispersion Coefficients**: Optimize mixing parameterization
+**Implementation**:
+```python
+tools/debugging/validate_boundary_data.py
+```
+- Plot boundary time series vs field data
+- Check for data gaps, outliers, unrealistic values
+- Verify tributary discharge matches river flow data
 
-#### Validation Targets
-- Tidal range: Match SIHYMECC observations (2.1-3.2m vs current 5.6-7.5m)
-- Temporal correlation: Maintain good R² scores while improving magnitude
-- Phase relationships: Ensure proper tidal propagation timing
+#### A3. Geometry and Bathymetry Verification
+**Objective**: Ensure geometric representation matches real estuary
 
-### Priority 3: Extended Simulation Framework
-**Target**: Enable seasonal cycle validation (Phase 3)
+**Critical Checks**:
+- [ ] **Cross-sectional Areas**: Verify against surveyed data
+- [ ] **Width Variations**: Check realistic estuary funnel shape
+- [ ] **Depth Profiles**: Ensure proper channel deepening seaward
+- [ ] **Distance Grid**: Confirm 0km=mouth to 202km=head mapping
 
-#### Requirements
-1. **Annual Simulations**: Extend from 35 to 365+ days
-2. **Seasonal Forcing**: Implement variable tributary flows and loadings
-3. **Meteorological Drivers**: Add temperature, wind, precipitation cycles
-4. **Performance Optimization**: Maintain computational efficiency at annual scale
-
-#### Technical Implementation
-- Implement checkpoint/restart capability for long simulations
-- Optimize memory usage for extended time series
-- Parallel processing for multi-year ensemble runs
+**Implementation**:
+```python
+tools/debugging/validate_geometry.py
+```
+- Compare model geometry with field survey data
+- Visualize channel shape and validate against Google Earth
+- Check for unrealistic sudden changes in cross-section
 
 ---
 
-## 📈 Implementation Timeline
+### Phase B: Hydrodynamic Equation Implementation (Days 3-5)
 
-### Phase A: Immediate (1-2 weeks)
-- [ ] Implement gradient-based biogeochemical calibration framework
-- [ ] Tune NH₄ and TOC parameters (highest priority species)
-- [ ] Begin hydrodynamic parameter sensitivity analysis
+#### B1. Saint-Venant Equation Verification
+**Objective**: Verify correct implementation of shallow water equations
 
-### Phase B: Short-term (3-4 weeks)
-- [ ] Complete biogeochemical parameter optimization for all species
-- [ ] Calibrate hydrodynamic parameters to match tidal observations
-- [ ] Implement extended simulation capability (365+ days)
+**Critical Checks**:
+- [ ] **Continuity Equation**: ∂A/∂t + ∂Q/∂x = 0
+- [ ] **Momentum Equation**: ∂Q/∂t + ∂(Q²/A)/∂x + gA∂η/∂x + friction = 0
+- [ ] **Friction Terms**: Manning's equation implementation
+- [ ] **Pressure Gradients**: Hydrostatic pressure assumption
 
-### Phase C: Medium-term (1-2 months)
-- [ ] Full annual simulation with seasonal forcing
-- [ ] Comprehensive validation against all field datasets
-- [ ] Uncertainty quantification and ensemble modeling
+**Mathematical Verification**:
+```python
+tools/debugging/verify_saintenant_equations.py
+```
+- Analytical test cases with known solutions
+- Check energy conservation in frictionless case
+- Verify tidal wave propagation speed: c = √(gh)
 
-### Phase D: Long-term (2-3 months)
-- [ ] Multi-year hindcast simulations
-- [ ] Sensitivity analysis and model diagnostics
-- [ ] Publication-ready validation and intercomparison
+#### B2. Boundary Condition Implementation
+**Objective**: Ensure boundary conditions are correctly applied to hydrodynamics
+
+**Critical Checks**:
+- [ ] **Downstream Boundary**: Tidal elevation forcing H(0,t) = AMPL*sin(ωt)
+- [ ] **Upstream Boundary**: River discharge Q(L,t) = Q_river
+- [ ] **Ghost Points**: Proper extrapolation at boundaries
+- [ ] **Reflection Handling**: Non-reflecting boundary conditions
+
+**Implementation**:
+```python
+tools/debugging/validate_hydro_boundaries.py
+```
+- Check boundary value application in matrix solver
+- Verify no artificial reflections at boundaries
+- Test with analytical tidal propagation solution
+
+#### B3. Numerical Stability Analysis
+**Objective**: Ensure hydrodynamic solver is numerically stable
+
+**Critical Checks**:
+- [ ] **CFL Condition**: Δt ≤ Δx/(|u| + √(gh))
+- [ ] **Matrix Conditioning**: Check tridiagonal solver stability
+- [ ] **Iteration Convergence**: Newton-Raphson convergence rates
+- [ ] **Mass Conservation**: ∂A/∂t + ∂Q/∂x = 0 exactly satisfied
+
+**Implementation**:
+```python
+tools/debugging/analyze_hydro_stability.py
+```
+- Monitor convergence of Newton iterations
+- Check conservation residuals at each time step
+- Analyze eigenvalues of linearized system
 
 ---
 
-## 🔧 Technical Architecture Enhancements
+### Phase C: Transport Equation Implementation (Days 6-8)
 
-### Calibration Infrastructure
-```
-tools/calibration/
-├── gradient_calibrator.py          # JAX-native optimization
-├── parameter_sensitivity.py        # Global sensitivity analysis
-├── objective_function.py           # Multi-metric validation
-└── uncertainty_quantification.py   # Bayesian inference
-```
+#### C1. Advection-Dispersion Equation Verification
+**Objective**: Verify correct implementation of transport physics
 
-### Extended Simulation Framework
-```
-src/core/
-├── annual_simulation.py           # Long-term integration
-├── seasonal_forcing.py            # Variable boundary conditions
-├── checkpoint_manager.py          # Simulation state management
-└── memory_optimizer.py            # Efficient data handling
-```
+**Critical Checks**:
+- [ ] **Advection Term**: ∂C/∂t + u∂C/∂x (upwind scheme)
+- [ ] **Dispersion Term**: ∂/∂x(D∂C/∂x) with proper coefficients
+- [ ] **Source/Sink Terms**: Biogeochemical reactions integration
+- [ ] **Cross-sectional Integration**: Proper 1D reduction from 3D equations
 
-### Validation Suite Enhancement
+**Mathematical Verification**:
+```python
+tools/debugging/verify_transport_equations.py
 ```
-tools/validation/
-├── comprehensive_metrics.py       # Statistical validation
-├── field_data_comparisons.py     # Multi-dataset validation
-├── physics_diagnostics.py        # Model behavior analysis
-└── publication_figures.py        # Automated reporting
+- Test against analytical solutions (Gaussian plume, exponential decay)
+- Verify Peclet number calculations Pe = uL/D
+- Check numerical dispersion vs physical dispersion
+
+#### C2. Dispersion Coefficient Calculation
+**Objective**: Ensure dispersion coefficients are physically realistic
+
+**Critical Checks**:
+- [ ] **Elder's Formula**: D = 5.93 * depth * u_friction
+- [ ] **Tidal Dispersion**: Enhanced mixing due to tidal oscillations  
+- [ ] **Geometric Dispersion**: Effects of channel geometry
+- [ ] **Magnitude Check**: Typical estuarine values 10-1000 m²/s
+
+**Implementation**:
+```python
+tools/debugging/validate_dispersion_coefficients.py
 ```
+- Compare calculated D with literature values for similar estuaries
+- Check spatial and temporal variation patterns
+- Verify scaling with velocity and geometry
+
+#### C3. Mass Conservation Verification
+**Objective**: Ensure transport solver conserves mass exactly
+
+**Critical Checks**:
+- [ ] **Total Mass Balance**: ∫∫∫ C dV = constant (no reactions)
+- [ ] **Flux Conservation**: Inflow = Outflow + Accumulation
+- [ ] **Boundary Flux**: Proper treatment of advective/diffusive fluxes
+- [ ] **Numerical Conservation**: Matrix solver preserves mass
+
+**Implementation**:
+```python
+tools/debugging/check_mass_conservation.py
+```
+- Track total system mass at each time step
+- Calculate mass balance residuals
+- Verify boundary flux calculations
 
 ---
 
-## 🎯 Success Criteria
+### Phase D: Biogeochemical Process Implementation (Days 9-11)
 
-### Calibration Targets
-| Metric | Current | Target | Priority |
-|--------|---------|--------|----------|
-| Longitudinal R² (avg) | 0.353 | >0.700 | High |
-| Tidal RMSE (avg) | 4.2m | <1.0m | High |
-| Seasonal Coverage | 35 days | 365 days | Medium |
-| Overall Model Status | FAIR | EXCELLENT | High |
+#### D1. Reaction Network Verification
+**Objective**: Ensure biogeochemical reactions are correctly implemented
 
-### Validation Benchmarks
-- **Spatial Validation**: R² > 0.7 for all major species
-- **Temporal Validation**: RMSE < 20% of observed range
-- **Physical Constraints**: Mass conservation < 1% error
-- **Performance**: Annual simulation < 2 hours wall time
+**Critical Checks**:
+- [ ] **Stoichiometry**: Redfield ratios C:N:P = 106:16:1
+- [ ] **Rate Laws**: Michaelis-Menten kinetics for uptake
+- [ ] **Temperature Dependence**: Arrhenius scaling Q₁₀ ≈ 2
+- [ ] **Oxygen Limitation**: Proper switching between aerobic/anaerobic
+
+**Scientific Verification**:
+```python
+tools/debugging/verify_biogeochemistry.py
+```
+- Test reaction rates against laboratory measurements
+- Check mass balance for each biogeochemical transformation
+- Verify coupling between carbon, nitrogen, phosphorus cycles
+
+#### D2. Species Interaction Validation
+**Objective**: Ensure proper coupling between chemical species
+
+**Critical Checks**:
+- [ ] **Primary Production**: O₂ production coupled to nutrient uptake
+- [ ] **Respiration**: O₂ consumption coupled to organic matter oxidation
+- [ ] **Nitrification**: NH₄→NO₃ conversion with O₂ consumption
+- [ ] **Denitrification**: NO₃ reduction under low O₂ conditions
+
+**Implementation**:
+```python
+tools/debugging/validate_species_coupling.py
+```
+- Check stoichiometric consistency in reactions
+- Verify O₂ balance matches carbon processing
+- Test extreme cases (high/low nutrients, O₂)
+
+#### D3. Parameter Realism Check
+**Objective**: Verify biogeochemical parameters are within observed ranges
+
+**Critical Checks**:
+- [ ] **Growth Rates**: μₘₐₓ ~ 1-3 d⁻¹ for phytoplankton
+- [ ] **Half-saturation**: K_s ~ 1-10 mmol/m³ for nutrients
+- [ ] **Mortality Rates**: m ~ 0.1-0.5 d⁻¹
+- [ ] **Settling Velocities**: w_s ~ 0.1-5 m/d for particles
+
+**Implementation**:
+```python
+tools/debugging/validate_biogeochem_parameters.py
+```
+- Compare with published values for tropical estuaries
+- Check sensitivity to parameter variations
+- Identify parameters causing unrealistic behavior
 
 ---
 
-## 📚 References and Methodology
+### Phase E: Integration and System-Level Validation (Days 12-14)
 
-### Scientific Foundation
-- **Hydrodynamics**: de Saint-Venant equations (Savenije, 2012)
-- **Biogeochemistry**: Reactive transport network (Volta et al., 2016)
-- **Calibration**: Sparse data methodology with statistical aggregates
+#### E1. Coupling Verification
+**Objective**: Ensure proper coupling between hydrodynamics, transport, and biogeochemistry
 
-### Field Data Sources
-- **CEM**: Longitudinal profiles (2-158km from mouth)
-- **SIHYMECC**: Tidal dynamics at PC, BD, BK stations
-- **CARE**: Long-term seasonal cycles at PC station
+**Critical Checks**:
+- [ ] **Velocity Field**: Transport uses correct hydrodynamic velocities
+- [ ] **Time Step Consistency**: All modules use same Δt
+- [ ] **Boundary Condition Passing**: Consistent BCs across modules
+- [ ] **State Variable Updates**: Proper sequence of operations
 
-### Technical Standards
-- **JAX-Native**: Functional programming with autodiff
-- **Configuration-Driven**: Zero hardcoding, complete portability
-- **Scientific Rigor**: Gradient-based optimization, uncertainty quantification
+**Implementation**:
+```python
+tools/debugging/validate_module_coupling.py
+```
+- Check data flow between modules
+- Verify time step synchronization
+- Test with decoupled runs (hydro-only, transport-only)
+
+#### E2. Energy and Mass Balance
+**Objective**: Verify overall system conservation laws
+
+**Critical Checks**:
+- [ ] **Energy Conservation**: Tidal energy dissipation matches friction losses
+- [ ] **Salt Conservation**: Total salt mass conserved
+- [ ] **Nutrient Conservation**: Mass balance for N, P, Si
+- [ ] **Carbon Conservation**: DIC + organic carbon balance
+
+**Implementation**:
+```python
+tools/debugging/validate_system_conservation.py
+```
+- Global mass/energy accounting at each time step
+- Identify sources of conservation violations
+- Check boundary flux consistency
+
+#### E3. Computational Performance Validation
+**Objective**: Ensure model efficiency and numerical accuracy
+
+**Critical Checks**:
+- [ ] **JAX JIT Compilation**: Verify all functions compile correctly
+- [ ] **Memory Usage**: Check for memory leaks or excessive allocation
+- [ ] **Convergence Testing**: Grid and time step independence
+- [ ] **Benchmark Comparison**: Compare with original C-GEM results
+
+**Implementation**:
+```python
+tools/debugging/validate_computational_performance.py
+```
+- Profile memory and CPU usage
+- Test convergence with refined grids
+- Compare key outputs with reference solutions
 
 ---
 
-## 🚀 Conclusion
+### Phase F: Targeted Issue Resolution (Days 15-18)
 
-The physics repair represents a **major milestone** in JAX C-GEM development, successfully transforming a numerically unstable model into a robust simulation framework. The model now exhibits proper estuarine physics with smooth spatial gradients and stable temporal evolution.
+#### F1. Tidal Overestimation Problem Resolution
+**Priority**: 🔴 **CRITICAL** - Fix 2-3x tidal amplitude overestimation
 
-The next phase focuses on **parameter calibration** to achieve excellent agreement with field observations. The roadmap prioritizes biogeochemical species with poor performance (NH₄, TOC) and addresses systematic tidal bias through hydrodynamic parameter tuning.
+**Systematic Investigation**:
+- [ ] **Friction Coefficient Check**: Manning's n may be too low (insufficient damping)
+- [ ] **Geometry Validation**: Cross-sectional areas may be too small (excessive amplification)
+- [ ] **Boundary Forcing**: Tidal input amplitude may be incorrectly scaled
+- [ ] **Wave Celerity**: Check shallow water wave speed √(gh) against observations
 
-**Key Success Factors**:
-1. Leverage JAX autodiff for efficient gradient-based calibration
-2. Maintain scientific rigor with multi-metric objective functions
-3. Implement extended simulation capability for seasonal validation
-4. Preserve architectural principles of configuration-driven design
+**Diagnostic Tools**:
+```python
+tools/debugging/diagnose_tidal_overestimation.py
+```
+- Compare modeled vs theoretical tidal propagation
+- Analyze energy dissipation along estuary length  
+- Test sensitivity to friction and geometry parameters
+- Validate against analytical solutions (quarter-wave resonance)
 
-The foundation is now solid; calibration will unlock the model's full scientific potential.
+**Expected Fix**: Likely Manning coefficient too low or geometry errors
+
+#### F2. Species Transport Poor Correlation Resolution  
+**Priority**: 🔴 **CRITICAL** - Fix R²=0.125-0.367 for most species
+
+**Systematic Investigation**:
+- [ ] **Dispersion Coefficient Magnitude**: May be unrealistic (too high/low)
+- [ ] **Boundary Condition Values**: Species concentrations may be wrong
+- [ ] **Reaction Rate Coupling**: Source/sink terms may dominate transport
+- [ ] **Initial Condition Effects**: Poor initialization affecting steady-state
+
+**Diagnostic Tools**:
+```python
+tools/debugging/diagnose_transport_correlation.py
+```
+- Run transport-only (no reactions) to isolate advection-dispersion
+- Test with constant boundary conditions vs realistic forcing
+- Analyze Peclet numbers and dispersion scaling
+- Compare with analytical transport solutions
+
+**Expected Fix**: Likely boundary conditions or dispersion coefficient issues
+
+#### F3. O₂ Success Pattern Analysis
+**Priority**: 🟢 **UNDERSTAND SUCCESS** - Why does O₂ work well (R²=0.792)?
+
+**Success Factor Investigation**:
+- [ ] **Boundary Conditions**: Are O₂ BCs more realistic than others?
+- [ ] **Source/Sink Balance**: Does reaeration balance consumption well?
+- [ ] **Transport Properties**: Is O₂ dispersion more accurate?
+- [ ] **Reaction Coupling**: Are O₂ reactions more stable/realistic?
+
+**Learning Tools**:
+```python
+tools/debugging/analyze_oxygen_success.py
+```
+- Compare O₂ vs other species transport characteristics
+- Identify what makes O₂ boundary conditions work better
+- Extract lessons for improving other species
+
+**Apply Lessons**: Use O₂ success pattern to fix other species
+
+---
+
+## 📋 Implementation Strategy
+
+### Development Environment Setup
+```
+tools/debugging/
+├── validate_input_configuration.py     # Phase A1-A3
+├── verify_saintenant_equations.py      # Phase B1
+├── validate_hydro_boundaries.py        # Phase B2
+├── analyze_hydro_stability.py          # Phase B3
+├── verify_transport_equations.py       # Phase C1
+├── validate_dispersion_coefficients.py # Phase C2
+├── check_mass_conservation.py          # Phase C3
+├── verify_biogeochemistry.py           # Phase D1
+├── validate_species_coupling.py        # Phase D2
+├── validate_biogeochem_parameters.py   # Phase D3
+├── validate_module_coupling.py         # Phase E1
+├── validate_system_conservation.py     # Phase E2
+├── validate_computational_performance.py # Phase E3
+├── diagnose_tidal_overestimation.py    # Phase F1
+├── diagnose_transport_correlation.py   # Phase F2
+└── analyze_oxygen_success.py           # Phase F3
+```
+
+### Validation Framework Architecture
+```python
+class PhysicsValidator:
+    def __init__(self, model_config, results):
+        self.config = model_config
+        self.results = results
+        
+    def validate_hydrodynamics(self) -> Dict[str, bool]:
+        """Comprehensive hydrodynamic validation"""
+        
+    def validate_transport(self) -> Dict[str, bool]:
+        """Transport equation and mass conservation checks"""
+        
+    def validate_biogeochemistry(self) -> Dict[str, bool]:
+        """Biogeochemical process validation"""
+        
+    def generate_physics_report(self) -> str:
+        """Comprehensive physics quality assessment"""
+```
+
+### Automated Testing Suite
+```python
+# Continuous physics validation
+pytest tools/debugging/test_physics_components.py -v
+```
+- Unit tests for each physics module
+- Integration tests for coupled behavior
+- Regression tests against analytical solutions
+- Performance benchmarks for computational efficiency
+
+---
+
+## 🎯 Success Criteria and Validation Metrics
+
+### Phase-by-Phase Success Metrics
+
+#### Phase A: Data/Configuration (PASS/FAIL)
+- [ ] All boundary data within realistic ranges
+- [ ] CFL condition satisfied (PASS: Δt < Δt_max)
+- [ ] Geometry matches field surveys (PASS: <10% difference)
+- [ ] Mass balance in boundary fluxes (PASS: |residual| < 1%)
+
+#### Phase B: Hydrodynamics (Quantitative Targets)
+- [ ] **Tidal Amplitude**: Model/Observed ratio 0.8-1.2 (Currently: 2-3x ❌)
+- [ ] **Wave Speed**: c_model ≈ √(gh) ± 20%
+- [ ] **Mass Conservation**: |∂A/∂t + ∂Q/∂x| < 1% of mean flow
+- [ ] **Energy Conservation**: Tidal energy budget closes within 10%
+
+#### Phase C: Transport (Quantitative Targets)  
+- [ ] **Mass Conservation**: Species mass change < 1% per day (no reactions)
+- [ ] **Peclet Number**: Pe = uL/D in realistic range (1-100)
+- [ ] **Dispersion Magnitude**: 10-1000 m²/s (typical estuarine range)
+- [ ] **Boundary Flux**: Consistent with observed loading rates
+
+#### Phase D: Biogeochemistry (Quantitative Targets)
+- [ ] **Stoichiometric Balance**: C:N:P ratios within 20% of Redfield
+- [ ] **O₂ Balance**: Production/consumption matches observed rates
+- [ ] **Parameter Ranges**: All rates within literature bounds
+- [ ] **Reaction Timescales**: Consistent with transport timescales
+
+#### Phase E-F: System Integration (Final Targets)
+- [ ] **Tidal Dynamics**: RMSE < 1.0m (vs current 3.8-4.6m ❌)
+- [ ] **Longitudinal Profiles**: R² > 0.6 for all major species (vs 0.125-0.367 ❌)
+- [ ] **Mass Conservation**: <1% error for all species
+- [ ] **Computational Performance**: >10,000 steps/minute
+
+### Physics Quality Classification
+- **EXCELLENT**: All targets met, ready for calibration
+- **GOOD**: Minor issues, calibration can proceed with caution  
+- **FAIR**: Major issues resolved, some fine-tuning needed
+- **POOR**: Fundamental problems, physics debugging required
+
+**Current Status**: FAIR → Target: GOOD minimum for calibration readiness
+
+---
+
+## � Next Steps and Immediate Actions
+
+### Week 1: Critical Physics Diagnosis (Start Immediately)
+
+#### Day 1: **Tidal Overestimation Emergency**
+```bash
+python tools/debugging/diagnose_tidal_overestimation.py
+```
+**Focus**: Why 5.6-7.5m vs observed 2.1-3.2m?
+- Check Manning friction coefficient (likely too low)
+- Verify geometry cross-sections (may cause excessive amplification)
+- Validate boundary tidal forcing amplitude
+
+#### Day 2: **Transport Failure Analysis**  
+```bash
+python tools/debugging/diagnose_transport_correlation.py
+```
+**Focus**: Why R²=0.125-0.367 for most species vs O₂ R²=0.792?
+- Compare dispersion coefficients with literature values
+- Check boundary condition values for each species
+- Test transport-only runs (no biogeochemistry)
+
+#### Day 3: **Mass Conservation Audit**
+```bash
+python tools/debugging/check_mass_conservation.py
+```
+**Focus**: Are we losing/gaining mass artificially?
+- Track total system mass for each species
+- Check boundary flux calculations
+- Verify numerical solver conservation properties
+
+### Week 2: Systematic Physics Validation
+
+#### Days 4-5: **Hydrodynamic Foundation**
+```bash
+python tools/debugging/verify_saintenant_equations.py
+python tools/debugging/validate_hydro_boundaries.py
+```
+
+#### Days 6-7: **Transport Equation Implementation**
+```bash
+python tools/debugging/verify_transport_equations.py
+python tools/debugging/validate_dispersion_coefficients.py
+```
+
+### Expected Outcomes
+
+#### Likely Findings (Based on Verification Results):
+1. **Tidal Issue**: Manning's n too low or geometry errors → 2-3x overestimation
+2. **Transport Issue**: Boundary conditions or dispersion coefficients → Poor species correlation
+3. **O₂ Success**: Identify what works for O₂, apply to other species
+
+#### Physics Repair Priorities:
+1. **CRITICAL**: Fix tidal amplitude (affects all transport processes)
+2. **CRITICAL**: Correct species boundary conditions (affects spatial gradients)
+3. **HIGH**: Validate mass conservation (fundamental requirement)
+4. **MEDIUM**: Optimize biogeochemical coupling (after transport works)
+
+---
+
+## 📚 References and Scientific Methodology
+
+### Hydrodynamic Validation Standards
+- **Saint-Venant Equations**: Cunge et al. (1980), Savenije (2012)
+- **Tidal Propagation**: Jay & Flinchem (1997), Godin (1999)
+- **Estuarine Hydrodynamics**: Dyer (1997), Valle-Levinson (2010)
+
+### Transport Process Validation
+- **Advection-Dispersion**: Fischer et al. (1979), Rutherford (1994)
+- **Elder's Formula**: Elder (1959), Liu (1977)
+- **Estuarine Mixing**: Geyer & MacCready (2014)
+
+### Biogeochemical Standards
+- **Redfield Ratios**: Redfield (1958), Geider & La Roche (2002)
+- **Estuarine Biogeochemistry**: Middelburg & Nieuwenhuize (2000), Volta et al. (2016)
+- **Tropical Estuaries**: Jennerjahn & Ittekkot (2002)
+
+### Numerical Methods
+- **JAX Ecosystem**: Bradbury et al. (2018), Hessel et al. (2024)
+- **Scientific Computing**: Press et al. (2007), LeVeque (2007)
+
+---
+
+## 🎯 Final Assessment
+
+### Current State: **FAIR Physics Status**
+✅ **Achieved**: Eliminated numerical oscillations, stable simulation framework  
+❌ **Remaining**: Fundamental physics implementation issues preventing field data agreement
+
+### Next Milestone: **GOOD Physics Status**  
+🎯 **Target**: Tidal dynamics within 20% of observations, species transport R² > 0.6
+🛠️ **Approach**: Systematic physics debugging, not parameter calibration
+⏱️ **Timeline**: 2-3 weeks of intensive physics validation and repair
+
+### Long-term Vision: **EXCELLENT Physics Status**
+🚀 **Ultimate Goal**: Model ready for gradient-based calibration and scientific applications
+📊 **Metrics**: R² > 0.7 spatial, RMSE < 20% temporal, mass conservation < 1%
+🔬 **Applications**: Multi-year hindcasts, climate change scenarios, management support
+
+**The foundation repair was successful. Now we build the physics correctly before calibrating parameters.**
