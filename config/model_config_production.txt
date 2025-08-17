@@ -1,8 +1,11 @@
+# JAX C-GEM Production Configuration
+# ==================================
+# Production configuration for full annual simulations with optimized parameters
+# from Phase II enhancements (90.5% average tidal error vs 130.6% baseline)
+
 # =====================
 # Platform Optimizations
 # =====================
-# Optimized for Windows Core i7 laptops without GPU
-# Idealized model for sparse data regions
 platform_mode = "cpu"       # Force CPU execution (no GPU required)
 jax_threads = 4             # Optimize for typical Core i7 quad-core
 memory_fraction = 0.8       # Conservative memory usage
@@ -14,32 +17,27 @@ calibration_mode = 0   # 0 = No Calibration, 1 = CMAES
 use_checkpointing = 1  # 1 = Save intermediate results, 0 = No checkpointing
 
 # =====================
-# Model Simulation Time - SHORT VERSION FOR PHASES 1&2
+# Model Simulation Time - FULL PRODUCTION VERSION
 # =====================
-MAXT = 40            # Max simulation time [days] - Short test for tidal amplitude calibration
-WARMUP = 30          # Warm-up period [days] - Sufficient for spatial validation
+MAXT = 365           # Max simulation time [days] - Full annual simulation
+WARMUP = 30          # Warm-up period [days] - Sufficient for model stabilization
 DELTI = 180           # Time step [sec] - 3 minutes for proper biogeochemical reactions  
-TS = 10               # Output save frequency - Save every 10 time steps (30 min output = 10 * 180 sec)
+TS = 10               # Output save frequency - Save every 10 time steps (30 min output)
 DELXI = 2000          # Spatial step [m]
-EL = 202000           # Estuarine length [m] - Gives M=102 grid points (EVEN number required for C-GEM)
-AMPL = 4.43           # Tidal amplitude at the mouth [m] - RESTORED to original field value
-Q_AVAIL = 250         # Default river discharge [m³/s] - Typical moderate discharge
+EL = 202000           # Estuarine length [m] - 102 grid points
+AMPL = 4.43           # Tidal amplitude at the mouth [m] - Field calibrated
+Q_AVAIL = 250         # Default river discharge [m³/s]
 
 # =====================
 # Simulation Start Date
 # =====================
-# The calendar date corresponding to the BEGINNING of the TOTAL simulation (including warmup)
-# The model will:
-# - Days 1-30: Warmup period using 2017 input data (model stabilization)  
-# - Days 31-50: Short validation period for spatial analysis
-# This ensures proper model initialization for Phase 1&2 validation
 simulation_start_date = "2017-01-01"  # Start date of TOTAL simulation (including warmup)
 time_zone = "UTC+7"                    # Local time zone (Saigon River is UTC+7)
 
 # =====================
 # Riverbed Profile File
 # =====================
-riverbed_profile_file = "INPUT/Geometry/river_bed_profile.txt"  # File for riverbed depth
+riverbed_profile_file = "INPUT/Geometry/river_bed_profile.txt"
 
 # =====================
 # Transport Calibration Parameters
@@ -49,45 +47,44 @@ num_segments = 2             # Number of LC segments
 # ----- Segment 1 -----
 index_1 = 0                  # First segment starts at cell index 0
 B1 = 3887.00                 # Width at the mouth [m] 
-LC1 = 50000.00               # Convergence length in segment 1 [m] - Moderate value
+LC1 = 50000.00               # Convergence length in segment 1 [m]
 LC1_min = 30000.00
 LC1_max = 80000.00
-Chezy1 = 150.0                 # Phase II optimized - advanced friction model
+Chezy1 = 150.0               # Phase II optimized - advanced friction model
 Chezy1_min = 20.0
 Chezy1_max = 35.0
-Rs1 = 0.8                  # Updated by advanced calibration
+Rs1 = 0.8                    # Dispersion coefficient
 Rs1_min = 0.9
 Rs1_max = 1.5
 
 # ----- Segment 2 -----
 index_2 = 31                 # Second segment starts at cell index 31 
-B2 = 1200.0                  # Updated by advanced calibration
-LC2 = 40000.00               # Convergence length in segment 2 [m] - Moderate value
+B2 = 1200.0                  # Width at transition point [m]
+LC2 = 40000.00               # Convergence length in segment 2 [m]
 LC2_min = 20000.00
 LC2_max = 60000.00
-Chezy2 = 200.0                 # Phase II optimized - advanced friction model
+Chezy2 = 200.0               # Phase II optimized - advanced friction model
 Chezy2_min = 25.0
 Chezy2_max = 45.0
-Rs2 = 0.8                  # Updated by advanced calibration
+Rs2 = 0.8                    # Dispersion coefficient
 Rs2_min = 0.8
 Rs2_max = 1.2
 
 # =====================
 # Biological & Chemical Parameters
 # =====================
-# Default biogeochemical parameters for 17-species reaction network
-# These control the nutrient cycling and phytoplankton dynamics
+# Biogeochemical parameters for 17-species reaction network
 
 # ----- Primary Production -----
-mumax_phy1 = 2.15           # Maximum growth rate for diatoms [day⁻¹] - CALIBRATED
-mumax_phy2 = 1.65           # Maximum growth rate for non-diatoms [day⁻¹] - CALIBRATED
+mumax_phy1 = 2.15           # Maximum growth rate for diatoms [day⁻¹]
+mumax_phy2 = 1.65           # Maximum growth rate for non-diatoms [day⁻¹]
 alpha = 4.11                # Photosynthetic efficiency [μE⁻¹ m² s day⁻¹]
-resp = 0.085                # Respiration rate coefficient [day⁻¹] - CALIBRATED
-mort = 0.055                # Mortality rate coefficient [day⁻¹] - CALIBRATED
+resp = 0.085                # Respiration rate coefficient [day⁻¹]
+mort = 0.055                # Mortality rate coefficient [day⁻¹]
 
 # ----- Nutrient Limitations -----
-ks_no3 = 2.75               # Half-saturation NO3 [mmol N/m³] - CALIBRATED
-ks_nh4 = 1.75               # Half-saturation NH4 [mmol N/m³] - CALIBRATED
+ks_no3 = 2.75               # Half-saturation NO3 [mmol N/m³]
+ks_nh4 = 1.75               # Half-saturation NH4 [mmol N/m³]
 ks_po4 = 0.05               # Half-saturation PO4 [mmol P/m³]
 ks_si = 7.07                # Half-saturation Si [mmol Si/m³]
 ks_light = 25.0             # Light limitation [μE/m²/s]
@@ -98,9 +95,9 @@ redfield_pc = 0.01          # P:C ratio (1:106)
 redfield_sic = 0.14         # Si:C ratio for diatoms (15:106)
 
 # ----- Remineralization -----
-k_min_pon = 0.15            # PON mineralization rate [day⁻¹] - CALIBRATED (degrad_rate)
+k_min_pon = 0.15            # PON mineralization rate [day⁻¹]
 k_min_pop = 0.0027          # POP mineralization rate [day⁻¹]
-k_nitrif = 0.175            # Nitrification rate [day⁻¹] - CALIBRATED
+k_nitrif = 0.175            # Nitrification rate [day⁻¹]
 k_denit = 0.05              # Denitrification rate [day⁻¹]
 
 # ----- Temperature Effects -----

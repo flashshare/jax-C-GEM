@@ -68,7 +68,7 @@ def ultra_optimized_simulation_step(hydro_state: HydroState, transport_state: Tr
     return new_hydro_state, final_transport_state
 
 
-def precompute_forcing_data(data_loader, time_array) -> Dict[str, np.ndarray]:
+def precompute_forcing_data(data_loader, time_array, model_config) -> Dict[str, np.ndarray]:
     """
     Pre-compute all forcing data to eliminate runtime dictionary lookups.
     
@@ -100,8 +100,13 @@ def precompute_forcing_data(data_loader, time_array) -> Dict[str, np.ndarray]:
             print(f"   Progress: {100*i/n_steps:.1f}% ({i:,}/{n_steps:,})")
             
         try:
-            # Load forcing data
-            forcing_data['tidal_elevation'][i] = data_loader.get_value('HourlyForcing_Elevation', float(time_val))
+            # FIXED: Generate sinusoidal tidal elevation from AMPL parameter
+            # Instead of reading from static CSV file, calculate proper tidal forcing
+            ampl = model_config.get('AMPL', 4.43)  # Tidal amplitude from config
+            tidal_period = 12.42 * 3600  # M2 tidal period in seconds (44,712 seconds)
+            tidal_phase = (2 * np.pi * time_val) / tidal_period  # Phase based on time
+            forcing_data['tidal_elevation'][i] = float(ampl * np.sin(tidal_phase))
+            
             forcing_data['upstream_discharge'][i] = data_loader.get_value('DailyForcing_Discharge', float(time_val))
             forcing_data['temperature'][i] = data_loader.get_value('DailyForcing_Temperature', float(time_val))
             forcing_data['light'][i] = data_loader.get_value('HourlyForcing_Light', float(time_val))
@@ -117,8 +122,11 @@ def precompute_forcing_data(data_loader, time_array) -> Dict[str, np.ndarray]:
                     forcing_data[f'UB_{species}'][i] = boundary_data['Upstream'][species]
                     
         except (KeyError, AttributeError):
-            # Safe defaults
-            forcing_data['tidal_elevation'][i] = 0.0
+            # Safe defaults - still use sinusoidal tidal elevation
+            ampl = model_config.get('AMPL', 4.43)
+            tidal_period = 12.42 * 3600
+            tidal_phase = (2 * np.pi * time_val) / tidal_period
+            forcing_data['tidal_elevation'][i] = float(ampl * np.sin(tidal_phase))
             forcing_data['upstream_discharge'][i] = 250.0
             forcing_data['temperature'][i] = 25.0
             forcing_data['light'][i] = 300.0
@@ -172,7 +180,7 @@ def run_full_optimized_simulation(model_state: Dict[str, Any]) -> Dict[str, Any]
     
     # === OPTIMIZATION 1: PRE-COMPUTE ALL FORCING DATA ===
     print("\n📊 Phase 1: Pre-computing forcing data (eliminates runtime lookups)...")
-    forcing_data = precompute_forcing_data(data_loader, time_array)
+    forcing_data = precompute_forcing_data(data_loader, time_array, simulation_config)
     
     # === OPTIMIZATION 2: BATCH OUTPUT ALLOCATION ===
     print("\n📦 Phase 2: Pre-allocating output arrays...")

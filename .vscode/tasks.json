@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "🚀 Run Model",
+            "label": "🚀 Run Model (Short)",
             "type": "shell",
             "command": "python",
             "args": [
@@ -20,20 +20,26 @@
             "options": {
                 "cwd": "${workspaceFolder}"
             },
-            "detail": "🎯 Run the C-GEM model with adaptive optimization (auto-detects best format)"
+            "detail": "🎯 Run the C-GEM model for Phase 1&2 validation (40-day simulation)"
         },
         {
-            "label": "⚡ Ultra-Performance Mode",
+            "label": "🏭 Production Run (365 days)",
             "type": "shell",
             "command": "python",
             "args": [
-                "src/main_ultra_performance.py"
+                "src/main.py",
+                "--mode",
+                "run",
+                "--config-file",
+                "config/model_config_production.txt",
+                "--output-format",
+                "auto"
             ],
             "group": "build",
             "options": {
                 "cwd": "${workspaceFolder}"
             },
-            "detail": "⚡ Ultra-high performance mode with vectorized batch processing (2x faster)"
+            "detail": "🏭 Run full annual production simulation with optimized parameters"
         },
         {
             "label": "🔬 Run with Physics Validation",
@@ -226,17 +232,30 @@
             "detail": "📈 Perform parameter sensitivity analysis using JAX autodiff"
         },
         {
-            "label": "📊 Simple Physics Plot",
+            "label": "� Comprehensive Physics Validation", 
             "type": "shell",
             "command": "python",
             "args": [
-                "src/core/simple_physics_validation.py"
+                "tools/verification/comprehensive_physics_validation.py"
             ],
             "group": "test",
             "options": {
                 "cwd": "${workspaceFolder}"
             },
-            "detail": "📊 Create simple physics validation plot (longitudinal profiles + tidal dynamics)"
-        }
+            "detail": "� Complete physics validation with all three verification phases"
+        },
+        {
+            "label": "📈 Hydrodynamic Analysis",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "tools/analysis/hydrodynamic_results_analyzer.py"
+            ],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "📈 Analyze hydrodynamic results and geometry corrections"
+        },
     ]
 }
