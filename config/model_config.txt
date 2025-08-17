@@ -16,8 +16,8 @@ use_checkpointing = 1  # 1 = Save intermediate results, 0 = No checkpointing
 # =====================
 # Model Simulation Time
 # =====================
-MAXT = 35            # Max simulation time [days] - 365 days (1 year) simulation for seasonal validation
-WARMUP = 10          # Warm-up period [days] - 100 days warmup for proper seasonal initialization
+MAXT = 50            # Max simulation time [days] - Extended test for physics validation
+WARMUP = 30          # Warm-up period [days] - Extended warmup for stability
 DELTI = 180           # Time step [sec] - 3 minutes for proper biogeochemical reactions  
 TS = 10               # Output save frequency - Save every 10 time steps (30 min output = 10 * 180 sec)
 DELXI = 2000          # Spatial step [m]
@@ -52,9 +52,9 @@ B1 = 3887.00                 # Width at the mouth [m]
 LC1 = 50000.00               # Convergence length in segment 1 [m] - Moderate value
 LC1_min = 30000.00
 LC1_max = 80000.00
-Chezy1 = 60.0                # Chezy coefficient segment 1 - Typical value
-Chezy1_min = 40.0
-Chezy1_max = 80.0
+Chezy1 = 25.0                # Chezy coefficient segment 1 - Much higher friction (n≈0.062)
+Chezy1_min = 20.0
+Chezy1_max = 35.0
 Rs1 = 1.2                    # Storage width ratio segment 1 - Moderate enhancement
 Rs1_min = 0.9
 Rs1_max = 1.5
@@ -65,9 +65,9 @@ B2 = 450.00                  # Width at segment 2 [m]  B_infl
 LC2 = 40000.00               # Convergence length in segment 2 [m] - Moderate value
 LC2_min = 20000.00
 LC2_max = 60000.00
-Chezy2 = 50.0                # Chezy coefficient segment 2 - Typical value
-Chezy2_min = 30.0
-Chezy2_max = 70.0
+Chezy2 = 20.0                # Chezy coefficient segment 2 - Very high friction upstream (n≈0.075)
+Chezy2_min = 15.0
+Chezy2_max = 30.0
 Rs2 = 1.1                    # Storage width ratio segment 2 - Slight enhancement
 Rs2_min = 0.9
 Rs2_max = 1.3

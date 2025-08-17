@@ -21,7 +21,7 @@ int main ()
 
     for (t=0; t<=MAXT; t+=DELTI)
     {
-		printf("t:%f\n",(double)t/(24.*60.*60.));
+		// printf("t:%f\n",(double)t/(24.*60.*60.));
 
         Hyd(t);
         bgboundary(t); //Load BC and lateral inputs

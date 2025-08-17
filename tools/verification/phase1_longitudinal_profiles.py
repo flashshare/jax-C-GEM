@@ -58,6 +58,12 @@ def load_model_results(results_dir="OUT"):
         # Extract time array - use 'time' key
         time_array = data['time'] if 'time' in data else np.arange(data['NH4'].shape[0])
         
+        # Extract water levels if available (for tidal amplitude calculation)
+        water_levels = None
+        if 'H' in data:
+            water_levels = data['H']  # Shape should be (time, space)
+            print(f"   ✓ Water levels: {water_levels.shape}")
+        
         # Extract species concentrations
         model_data = {}
         for species in UNIT_CONVERSION_FACTORS.keys():
@@ -68,7 +74,8 @@ def load_model_results(results_dir="OUT"):
         return {
             'locations': locations,
             'time_array': time_array,
-            'species_data': model_data
+            'species_data': model_data,
+            'water_levels': water_levels
         }
     else:
         raise FileNotFoundError(f"Model results not found in {results_dir}")
@@ -148,6 +155,54 @@ def calculate_time_averaged_profiles(model_results, warmup_days=100):
     
     return {'locations': locations, 'profiles': profiles}
 
+def calculate_tidal_amplitude_profile(model_results, warmup_days=100):
+    """Calculate tidal amplitude profile from mouth to upstream.
+    
+    Args:
+        model_results: Dictionary containing time series data
+        warmup_days: Days to exclude from analysis for model spinup
+        
+    Returns:
+        Dictionary with locations and tidal_amplitude arrays, or None if no water level data
+    """
+    print(f"🌊 Calculating tidal amplitude profile")
+    
+    # Check if water levels are available in the model results
+    if 'water_levels' not in model_results or model_results['water_levels'] is None:
+        print("   ⚠️ Water level data not available in model results")
+        return None
+    
+    locations = model_results['locations']
+    time_array = model_results['time_array']
+    water_levels = model_results['water_levels']  # Shape: (time, space)
+    
+    # Skip warmup period
+    warmup_steps = warmup_days * 24  # hours
+    if len(time_array) > warmup_steps:
+        analysis_start = warmup_steps
+        print(f"   ✓ Using data from step {analysis_start} to {len(time_array)}")
+    else:
+        analysis_start = 0
+        print(f"   ⚠️  Short simulation: using all {len(time_array)} steps")
+    
+    print(f"   Water levels shape: {water_levels.shape}")
+    
+    if water_levels.shape[0] > analysis_start:
+        # Use steady-state period for tidal analysis
+        steady_water_levels = water_levels[analysis_start:]
+        
+        # Calculate tidal range (max - min) at each location
+        tidal_amplitude = np.max(steady_water_levels, axis=0) - np.min(steady_water_levels, axis=0)
+        
+        print(f"   ✓ Tidal amplitude range: {tidal_amplitude.min():.3f} - {tidal_amplitude.max():.3f} m")
+        
+        return {
+            'locations': locations,
+            'tidal_amplitude': tidal_amplitude
+        }
+    
+    return None
+
 def aggregate_cem_by_location(cem_data):
     """Aggregate CEM observations by location and species."""
     print("📊 Aggregating CEM data by location")
@@ -213,7 +268,8 @@ def calculate_validation_metrics(model_values, field_values):
         'n_points': np.sum(valid_mask)
     }
 
-def create_validation_figure(model_profiles, cem_aggregated, interpolated_model, output_dir="OUT"):
+def create_validation_figure(model_profiles, cem_aggregated, interpolated_model, 
+                           tidal_amplitude=None, output_dir="OUT"):
     """Create comprehensive validation figure."""
     print("🎨 Creating longitudinal profile validation figure")
     
@@ -226,10 +282,23 @@ def create_validation_figure(model_profiles, cem_aggregated, interpolated_model,
         print("   ⚠️  No common species found for validation")
         return
     
-    # Create figure
-    n_species = len(common_species)
-    fig, axes = plt.subplots(2, 3, figsize=(18, 12))
-    axes = axes.flatten()
+    # Create figure with space for tidal amplitude if available
+    has_tidal = tidal_amplitude is not None
+    n_total_panels = len(common_species) + (1 if has_tidal else 0)
+    
+    # Adjust subplot layout for optimal arrangement
+    if n_total_panels <= 4:
+        ncols = 2
+        nrows = (n_total_panels + 1) // 2
+    elif n_total_panels <= 6:
+        ncols = 3
+        nrows = 2
+    else:
+        ncols = 3
+        nrows = (n_total_panels + 2) // 3
+    
+    fig, axes = plt.subplots(nrows, ncols, figsize=(6*ncols, 4*nrows))
+    axes = axes.flatten() if n_total_panels > 1 else [axes]
     
     validation_results = {}
     
@@ -278,8 +347,35 @@ def create_validation_figure(model_profiles, cem_aggregated, interpolated_model,
         if not species_data.empty:
             ax.set_xlim(0, max(locations.max(), species_data['location'].max()) * 1.1)
     
+    # Add tidal amplitude panel if data is available
+    if has_tidal and len(common_species) < len(axes):
+        tidal_ax = axes[len(common_species)]
+        tidal_locations = tidal_amplitude['locations']
+        tidal_range = tidal_amplitude['tidal_amplitude']
+        
+        # Plot tidal amplitude profile
+        tidal_ax.plot(tidal_locations, tidal_range, 'b-', linewidth=2.5, 
+                     label='Model Tidal Amplitude', alpha=0.8)
+        
+        # Formatting
+        tidal_ax.set_xlabel('Distance from Mouth (km)')
+        tidal_ax.set_ylabel('Tidal Amplitude (m)')
+        tidal_ax.set_title('Tidal Amplitude Profile (Mouth → Upstream)')
+        tidal_ax.legend()
+        tidal_ax.grid(True, alpha=0.3)
+        tidal_ax.set_xlim(0, tidal_locations.max() * 1.05)
+        
+        # Add informative text
+        max_tidal = np.max(tidal_range)
+        min_tidal = np.min(tidal_range)
+        tidal_ax.text(0.05, 0.95, 
+                     f'Max: {max_tidal:.2f} m\nMin: {min_tidal:.2f} m\nDecay: {max_tidal/min_tidal:.1f}x', 
+                     transform=tidal_ax.transAxes, verticalalignment='top',
+                     bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8))
+    
     # Remove empty subplots
-    for i in range(len(common_species), len(axes)):
+    total_used = len(common_species) + (1 if has_tidal else 0)
+    for i in range(total_used, len(axes)):
         axes[i].remove()
     
     plt.tight_layout()
@@ -314,6 +410,9 @@ def main():
         # Calculate time-averaged profiles
         model_profiles = calculate_time_averaged_profiles(model_results)
         
+        # Calculate tidal amplitude profile
+        tidal_amplitude = calculate_tidal_amplitude_profile(model_results)
+        
         # Aggregate field data
         cem_aggregated = aggregate_cem_by_location(cem_data)
         
@@ -321,9 +420,9 @@ def main():
         station_locations = cem_aggregated['location'].unique()
         interpolated_model = interpolate_model_to_stations(model_profiles, station_locations)
         
-        # Create validation figure
+        # Create validation figure with tidal amplitude
         validation_results = create_validation_figure(model_profiles, cem_aggregated, 
-                                                    interpolated_model)
+                                                    interpolated_model, tidal_amplitude)
         
         print("\n✅ Phase 1 validation completed successfully!")
         

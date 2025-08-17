@@ -26,7 +26,7 @@ from typing import Dict, Any, List, Tuple, Callable, Optional, Union
 
 # Import needed model components
 import sys
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src" / "core"))
 from config_parser import parse_model_config
 from simulation_engine import run_simulation
 import model_config as mc

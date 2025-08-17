@@ -94,7 +94,19 @@ def save_results_as_npz(results: Dict[str, Any], output_dir: str = "OUT"):
         if len(species_list) > 0:
             print(f"    Converting {species_name}...")
             # Stack list of JAX arrays into single NumPy array
-            species_data[species_name] = np.stack([np.array(step) for step in species_list])
+            species_array = np.stack([np.array(step) for step in species_list])
+            species_data[species_name] = species_array
+            
+            # DEBUG: Check salinity values during NPZ creation
+            if species_name == 'S':
+                print(f"    🧪 SALINITY DEBUG IN NPZ CREATION:")
+                print(f"       Final time step shape: {species_array[-1].shape}")
+                print(f"       Index 0 (should be mouth): {species_array[-1, 0]:.3f} PSU")
+                print(f"       Index -1 (should be head): {species_array[-1, -1]:.3f} PSU")
+                if species_array[-1, 0] > species_array[-1, -1]:
+                    print(f"       ✅ Correct gradient in NPZ writer")
+                else:
+                    print(f"       ❌ INVERTED gradient in NPZ writer!")
     
     # Save main results file
     main_file = os.path.join(output_dir, "complete_simulation_results.npz")

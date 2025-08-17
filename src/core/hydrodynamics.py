@@ -372,7 +372,7 @@ def solve_tridiagonal(coefficients: Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]
 
 @jax.jit
 def update_variables(TH: jnp.ndarray, TU: jnp.ndarray, solution: jnp.ndarray,
-                    even_mask: jnp.ndarray, odd_mask: jnp.ndarray) -> Tuple[jnp.ndarray, jnp.ndarray]:
+                    Chezy: jnp.ndarray, even_mask: jnp.ndarray, odd_mask: jnp.ndarray) -> Tuple[jnp.ndarray, jnp.ndarray]:
     """
     FIXED: Stable explicit update for H and U with proper parameter handling.
     
@@ -412,11 +412,11 @@ def update_variables(TH: jnp.ndarray, TU: jnp.ndarray, solution: jnp.ndarray,
         # Standard Saint-Venant friction formula: τ = g*|U|*U / (C²*R)
         # where C is Chezy coefficient, R is hydraulic radius
         
-        # Use realistic Chezy coefficients (uniform across domain for simplicity)
-        # Later this will be properly segmented using configured values
-        chezy_val = 55.0  # Average of Chezy1=60.0 and Chezy2=50.0 from model_config.txt
+        # Use properly configured Chezy coefficients (spatially varying)
+        # Current values: Chezy1=25.0, Chezy2=20.0 for high friction to reduce tidal overestimation
+        chezy_val = Chezy[i]  # Use spatially-varying Chezy coefficients from config
         
-        # Calculate hydraulic radius (simplified for 1D: approximated by water depth)
+        # Calculate hydraulic radius (simplified for 1D: approximated by water depth)  
         # Use minimum depth to avoid excessive friction
         hydraulic_radius = 5.0  # Typical estuary depth assumption
         
@@ -472,7 +472,7 @@ def update_variables(TH: jnp.ndarray, TU: jnp.ndarray, solution: jnp.ndarray,
     
     vel_magnitude_downstream = jnp.abs(TU_safe[0])
     # CORRECTED: Use proper friction formula with configured Chezy coefficient (segment 1)
-    chezy_downstream = 60.0  # From model_config.txt
+    chezy_downstream = Chezy[0]  # Use configured Chezy1 from config (25.0)
     hydraulic_radius_downstream = 5.0  # Typical estuary depth
     friction_coefficient_downstream = G / (chezy_downstream * chezy_downstream * hydraulic_radius_downstream)
     friction_term_downstream = -friction_coefficient_downstream * vel_magnitude_downstream * TU_safe[0]
@@ -496,7 +496,7 @@ def update_variables(TH: jnp.ndarray, TU: jnp.ndarray, solution: jnp.ndarray,
         
         vel_magnitude_near_upstream = jnp.abs(TU_safe[M-2])
         # CORRECTED: Use proper friction formula with configured Chezy coefficient (segment 2)
-        chezy_near_upstream = 50.0  # From model_config.txt
+        chezy_near_upstream = Chezy[M-2]  # Use configured Chezy2 from config (20.0)
         hydraulic_radius_near_upstream = 5.0  # Typical estuary depth
         friction_coefficient_near_upstream = G / (chezy_near_upstream * chezy_near_upstream * hydraulic_radius_near_upstream)
         friction_term_near_upstream = -friction_coefficient_near_upstream * vel_magnitude_near_upstream * TU_safe[M-2]
@@ -633,7 +633,7 @@ def hydrodynamic_step(state: HydroState, params: HydroParams,
         solution = solve_tridiagonal(coeffs, Z)
         
         # Update variables
-        TH_new, TU_new = update_variables(TH_curr, TU_curr, solution, even_mask, odd_mask)
+        TH_new, TU_new = update_variables(TH_curr, TU_curr, solution, params.Chezy, even_mask, odd_mask)
         
         # CORRECTED: Gentle relaxation without velocity suppression
         # Use lighter relaxation to maintain solution stability
