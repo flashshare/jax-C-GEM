@@ -1,0 +1,24 @@
+JAX C-GEM PHYSICS REPAIR SUMMARY
+==================================================
+
+1. BOUNDARY CONDITIONS FIXED:
+   - Upstream salinity: 0 PSU (freshwater)
+   - Downstream salinity: 35 PSU (seawater)
+   - Upstream nutrients: High (river input)
+   - Downstream nutrients: Low (seawater)
+   - Proper tidal forcing: ±4.43m amplitude
+
+2. INITIAL CONDITIONS STABILIZED:
+   - Smooth salinity gradient: 35→0 PSU
+   - Proper nutrient gradients: High upstream
+   - Realistic oxygen distribution
+
+3. EXPECTED LONGITUDINAL PROFILES:
+   - Salinity: Smooth 35→0 gradient downstream to upstream
+   - NH4: Smooth ~5→150 gradient mouth to head
+   - Tidal amplitude: Decay from 4.43m to ~0m
+
+4. VALIDATION CRITERIA:
+   - No oscillations in spatial profiles
+   - Monotonic gradients
+   - Physical realism

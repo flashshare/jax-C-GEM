@@ -56,7 +56,70 @@ def main():
         if not success:
             print("❌ Simulation failed")
             return 1
+        
+        # Comprehensive automated physics validation
+        if not args.no_physics_check:
+            try:
+                print("\n" + "="*80)
+                print("🔬 AUTOMATED PHYSICS VALIDATION WITH LONGITUDINAL PROFILES")
+                print("="*80)
+                from core.automated_physics_validation import run_automated_physics_validation
+                
+                # Determine results file based on output format
+                if output_format == 'npz' or output_format == 'auto':
+                    results_file = "OUT/complete_simulation_results.npz"
+                else:
+                    results_file = "OUT/complete_simulation_results.npz"  # Will fall back to CSV
+                
+                validation_results = run_automated_physics_validation(results_file)
+                
+                if validation_results and validation_results['validation_results']:
+                    overall_status = validation_results['validation_results'].get('overall_status', 'UNKNOWN')
+                    
+                    print(f"\n🎯 AUTOMATED VALIDATION SUMMARY:")
+                    print(f"   Overall Physics Status: {overall_status}")
+                    
+                    if overall_status == 'EXCELLENT':
+                        print("   🎉 EXCELLENT! Model exhibits proper estuarine physics")
+                        print("   ✅ All gradients are correct and profiles are smooth")
+                        print("   � RECOMMENDED: Proceed to 3-phase verification with observed data")
+                        print("   � Next commands:")
+                        print("      python tools/verification/phase1_longitudinal_profiles.py")
+                        print("      python tools/verification/phase2_tidal_dynamics.py")
+                        print("      python tools/verification/phase3_seasonal_cycles.py")
+                        
+                    elif overall_status in ['GOOD', 'FAIR']:
+                        print(f"   ⚠️  {overall_status} status - Some physics issues detected")
+                        print("   📊 Check longitudinal profiles and validation figures")
+                        print("   � Review recommendations above for specific fixes")
+                        print("   📈 Validation plots saved to: OUT/Validation/")
+                        
+                    else:
+                        print("   ❌ POOR physics validation - Major issues detected")
+                        print("   🚨 Model does NOT exhibit realistic estuarine behavior")
+                        print("   📋 DO NOT proceed to field data verification yet")
+                        print("   🔧 Follow debugging checklist above")
+                        print("   � Check boundary conditions, parameters, and solver stability")
+                    
+                    # Always show file locations
+                    if validation_results.get('figure_path'):
+                        print(f"   📊 Validation figure: {validation_results['figure_path']}")
+                    if validation_results.get('csv_path'):
+                        print(f"   📊 Mean profiles CSV: {validation_results['csv_path']}")
+                        
+                else:
+                    print("   ❌ Physics validation encountered errors")
+                    print("   📋 Check simulation outputs and try manual validation")
+                    
+            except Exception as e:
+                print(f"⚠️ Physics validation failed: {e}")
+                if args.debug:
+                    import traceback
+                    traceback.print_exc()
+                print("   💡 Try manual validation: python src/comprehensive_debug.py")
             
+        print("="*80)
+        
         # Print performance summary
         total_time = time.time() - total_start
         print_performance_summary(total_time, "standard")

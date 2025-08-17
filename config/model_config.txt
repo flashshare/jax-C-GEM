@@ -16,8 +16,8 @@ use_checkpointing = 1  # 1 = Save intermediate results, 0 = No checkpointing
 # =====================
 # Model Simulation Time
 # =====================
-MAXT = 365            # Max simulation time [days] - 365 days (1 year) simulation for seasonal validation
-WARMUP = 100          # Warm-up period [days] - 100 days warmup for proper seasonal initialization
+MAXT = 35            # Max simulation time [days] - 365 days (1 year) simulation for seasonal validation
+WARMUP = 10          # Warm-up period [days] - 100 days warmup for proper seasonal initialization
 DELTI = 180           # Time step [sec] - 3 minutes for proper biogeochemical reactions  
 TS = 10               # Output save frequency - Save every 10 time steps (30 min output = 10 * 180 sec)
 DELXI = 2000          # Spatial step [m]

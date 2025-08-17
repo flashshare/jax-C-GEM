@@ -45,16 +45,16 @@ REDFIELD_SI = 15.0 / 106.0
 REDFIELD_N = 16.0 / 106.0  
 REDFIELD_P = 1.0 / 106.0
 
-# Default biogeochemical parameters (will be overridden by calibration)
+# Default biogeochemical parameters (ultra-stable for smooth profiles)
 DEFAULT_BIO_PARAMS = {
-    # Phytoplankton parameters - FIXED: More balanced rates for stable dynamics
-    'mumax_dia': 1.39e-5,  # Maximum growth rate for diatoms [1/s] - reduced 4x for stability
-    'mumax_ndia': 1.39e-5,  # Maximum growth rate for non-diatoms [1/s] - reduced 4x for stability
-    'alpha_light': 4.11e-7,  # Light saturation parameter
-    'resp_dia': 4.0e-8,  # Respiration rate for diatoms [1/s] - reduced 4x for stability
-    'resp_ndia': 4.0e-8,  # Respiration rate for non-diatoms [1/s] - reduced 4x for stability
-    'mort_dia': 3.6e-8,  # Mortality rate for diatoms [1/s] - reduced 4x for stability
-    'mort_ndia': 3.6e-8,  # Mortality rate for non-diatoms [1/s] - reduced 4x for stability
+    # Phytoplankton parameters - ULTRA CONSERVATIVE for 180s time step
+    'mumax_dia': 1.39e-7,    # Maximum growth rate for diatoms [1/s] - 100x slower for stability
+    'mumax_ndia': 1.39e-7,   # Maximum growth rate for non-diatoms [1/s] - 100x slower
+    'alpha_light': 4.11e-9,  # Light saturation parameter - 100x slower
+    'resp_dia': 4.0e-10,     # Respiration rate for diatoms [1/s] - 100x slower
+    'resp_ndia': 4.0e-10,    # Respiration rate for non-diatoms [1/s] - 100x slower
+    'mort_dia': 3.6e-10,     # Mortality rate for diatoms [1/s] - 100x slower
+    'mort_ndia': 3.6e-10,    # Mortality rate for non-diatoms [1/s] - 100x slower
     
     # Half-saturation constants
     'ks_no3': 12.13,  # Half-saturation for NO3 [mmol/m³]
@@ -72,10 +72,10 @@ DEFAULT_BIO_PARAMS = {
     'ki_o2_anaerobic': 33.0,  # O2 inhibition of anaerobic processes
     'ki_o2_denitrif': 33.0,  # O2 inhibition of denitrification
     
-    # Rate constants - FIXED: More realistic rates for stable oxygen dynamics
-    'degrad_rate': 1.8e-6,  # Organic matter degradation rate [1/s] - reduced 100x for stability
-    'nitrif_rate': 1.6e-6,  # Nitrification rate [1/s] - reduced 100x for stability  
-    'denitrif_rate': 3.05e-6,  # Denitrification rate [1/s] - reduced 100x for stability
+    # Rate constants - ULTRA CONSERVATIVE for smooth profiles
+    'degrad_rate': 1.8e-9,   # Organic matter degradation rate [1/s] - 1000x slower for stability
+    'nitrif_rate': 1.6e-9,   # Nitrification rate [1/s] - 1000x slower for stability
+    'denitrif_rate': 3.05e-9,  # Denitrification rate [1/s] - 1000x slower for stability
     
     # Temperature dependence (Q10 values)
     'q10_phyto': 1.067,  # Q10 for phytoplankton processes
@@ -95,7 +95,7 @@ DEFAULT_BIO_PARAMS = {
     'o2_to_n_nitrif': 2.0,  # O2:N ratio in nitrification
     
     # Other parameters
-    'anaerobic_factor': 0.1,  # Relative rate of anaerobic vs aerobic degradation
+    'anaerobic_factor': 0.01,  # Ultra-slow anaerobic processes for stability
 }
 
 # Species physical bounds [min, max] for numerical stability

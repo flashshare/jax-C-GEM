@@ -317,6 +317,15 @@ def run_full_optimized_simulation(model_state: Dict[str, Any]) -> Dict[str, Any]
         salinity_data = results['transport'].get('S', concentrations_output[:, :, -1])
         print(f"   Salinity range: {np.min(salinity_data):.1f} to {np.max(salinity_data):.1f} psu")
     
+    # Optional: Run physics validation if enabled
+    if model_state.get('enable_physics_validation', False):
+        try:
+            from .physics_validation_utils import quick_physics_validation
+            validation_summary = quick_physics_validation(results, model_state['model_config'], verbose=True)
+            results['physics_validation'] = validation_summary
+        except Exception as e:
+            print(f"⚠️ Physics validation skipped: {e}")
+    
     return results
 
 

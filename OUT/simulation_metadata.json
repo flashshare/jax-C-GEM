@@ -1,9 +1,9 @@
 {
-  "simulation_days": 31535820.0,
-  "time_steps": 12721,
+  "simulation_days": 3023820.0,
+  "time_steps": 1201,
   "grid_points": 102,
   "format_version": "1.0",
-  "created": "2025-08-16 17:06:11",
+  "created": "2025-08-17 02:14:30",
   "hydro_variables": [
     "H",
     "U",
