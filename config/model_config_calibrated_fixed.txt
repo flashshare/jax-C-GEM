@@ -16,7 +16,7 @@ use_checkpointing = 1  # 1 = Save intermediate results, 0 = No checkpointing
 # =====================
 # Model Simulation Time - SHORT VERSION FOR PHASES 1&2
 # =====================
-MAXT = 465           # Max simulation time [days] - 100 warmup + 365 for seasonal validation
+MAXT = 50            # Max simulation time [days] - Short for Phase 1&2 validation
 WARMUP = 30          # Warm-up period [days] - Sufficient for spatial validation
 DELTI = 180           # Time step [sec] - 3 minutes for proper biogeochemical reactions  
 TS = 10               # Output save frequency - Save every 10 time steps (30 min output = 10 * 180 sec)

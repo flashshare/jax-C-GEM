@@ -14,10 +14,10 @@ calibration_mode = 0   # 0 = No Calibration, 1 = CMAES
 use_checkpointing = 1  # 1 = Save intermediate results, 0 = No checkpointing
 
 # =====================
-# Model Simulation Time - SHORT VERSION FOR PHASES 1&2
+# Model Simulation Time
 # =====================
 MAXT = 465           # Max simulation time [days] - 100 warmup + 365 for seasonal validation
-WARMUP = 30          # Warm-up period [days] - Sufficient for spatial validation
+WARMUP = 100         # Warm-up period [days] - Required for proper seasonal cycle analysis
 DELTI = 180           # Time step [sec] - 3 minutes for proper biogeochemical reactions  
 TS = 10               # Output save frequency - Save every 10 time steps (30 min output = 10 * 180 sec)
 DELXI = 2000          # Spatial step [m]
@@ -30,9 +30,9 @@ Q_AVAIL = 250         # Default river discharge [m³/s] - Typical moderate disch
 # =====================
 # The calendar date corresponding to the BEGINNING of the TOTAL simulation (including warmup)
 # The model will:
-# - Days 1-30: Warmup period using 2017 input data (model stabilization)  
-# - Days 31-50: Short validation period for spatial analysis
-# This ensures proper model initialization for Phase 1&2 validation
+# - Days 1-100: Warmup period using 2017 input data (model stabilization)  
+# - Days 101-830: Real simulation covering full 2 years (2017-01-01 to 2018-12-31)
+# This ensures proper model initialization and covers all field observation periods
 simulation_start_date = "2017-01-01"  # Start date of TOTAL simulation (including warmup)
 time_zone = "UTC+7"                    # Local time zone (Saigon River is UTC+7)
 
@@ -65,50 +65,34 @@ B2 = 450.00                  # Width at segment 2 [m]  B_infl
 LC2 = 40000.00               # Convergence length in segment 2 [m] - Moderate value
 LC2_min = 20000.00
 LC2_max = 60000.00
-Chezy2 = 35.0                # Chezy coefficient segment 2 - Lower friction upstream (n≈0.044)
-Chezy2_min = 25.0
-Chezy2_max = 45.0
-Rs2 = 1.0                    # Storage width ratio segment 2 - Minimal enhancement
-Rs2_min = 0.8
-Rs2_max = 1.2
+Chezy2 = 20.0                # Chezy coefficient segment 2 - Very high friction upstream (n≈0.075)
+Chezy2_min = 15.0
+Chezy2_max = 30.0
+Rs2 = 1.1                    # Storage width ratio segment 2 - Slight enhancement
+Rs2_min = 0.9
+Rs2_max = 1.3
 
 # =====================
-# Biological & Chemical Parameters
+# Sediment Parameters (Consistent with Segments)
 # =====================
-# Default biogeochemical parameters for 17-species reaction network
-# These control the nutrient cycling and phytoplankton dynamics
+# ----- Segment 1 -----
+Mero1 = 1.3e-6              # Erosion coefficient for segment 1
+Mero1_min = 1.0e-6
+Mero1_max = 2.0e-6
+tau_ero1 = 1.2              # Critical shear stress for erosion in segment 1
+tau_ero1_min = 0.8
+tau_ero1_max = 1.5
+tau_dep1 = 0.35             # Critical shear stress for deposition in segment 1
+tau_dep1_min = 0.2
+tau_dep1_max = 0.6
 
-# ----- Primary Production -----
-mumax_phy1 = 2.15           # Maximum growth rate for diatoms [day⁻¹] - CALIBRATED
-mumax_phy2 = 1.65           # Maximum growth rate for non-diatoms [day⁻¹] - CALIBRATED
-alpha = 4.11                # Photosynthetic efficiency [μE⁻¹ m² s day⁻¹]
-resp = 0.085                # Respiration rate coefficient [day⁻¹] - CALIBRATED
-mort = 0.055                # Mortality rate coefficient [day⁻¹] - CALIBRATED
-
-# ----- Nutrient Limitations -----
-ks_no3 = 2.75               # Half-saturation NO3 [mmol N/m³] - CALIBRATED
-ks_nh4 = 1.75               # Half-saturation NH4 [mmol N/m³] - CALIBRATED
-ks_po4 = 0.05               # Half-saturation PO4 [mmol P/m³]
-ks_si = 7.07                # Half-saturation Si [mmol Si/m³]
-ks_light = 25.0             # Light limitation [μE/m²/s]
-
-# ----- Redfield Ratios -----
-redfield_nc = 0.15          # N:C ratio (16:106)
-redfield_pc = 0.01          # P:C ratio (1:106)
-redfield_sic = 0.14         # Si:C ratio for diatoms (15:106)
-
-# ----- Remineralization -----
-k_min_pon = 0.15            # PON mineralization rate [day⁻¹] - CALIBRATED (degrad_rate)
-k_min_pop = 0.0027          # POP mineralization rate [day⁻¹]
-k_nitrif = 0.175            # Nitrification rate [day⁻¹] - CALIBRATED
-k_denit = 0.05              # Denitrification rate [day⁻¹]
-
-# ----- Temperature Effects -----
-q10_photo = 1.8             # Q10 for photosynthesis
-q10_resp = 2.0              # Q10 for respiration and mineralization
-q10_nitrif = 1.8            # Q10 for nitrification
-
-# ----- Light Attenuation -----
-k_bg = 1.3                  # Background light attenuation [m⁻¹]
-k_spm = 0.001               # SPM light attenuation [m²/g]
-k_chl = 0.01                # Chlorophyll light attenuation [m²/mg]
+# ----- Segment 2 -----
+Mero2 = 1.6e-5              # Erosion coefficient for segment 2
+Mero2_min = 1.0e-5
+Mero2_max = 2.5e-5
+tau_ero2 = 0.8              # Critical shear stress for erosion in segment 2
+tau_ero2_min = 0.5
+tau_ero2_max = 1.2
+tau_dep2 = 0.25             # Critical shear stress for deposition in segment 2
+tau_dep2_min = 0.15
+tau_dep2_max = 0.5

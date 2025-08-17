@@ -295,8 +295,9 @@ def create_initial_transport_state(model_config: Dict[str, Any]) -> TransportSta
     # Create nutrient gradients correlated with salinity (estuarine mixing)
     salinity_normalized = (salinity_profile - river_salinity) / (ocean_salinity - river_salinity)
     
-    # Oxygen: higher in marine, lower in riverine/organic-rich areas
-    o2_marine, o2_river = 280.0, 180.0
+    # Oxygen: Marine values calibrated to realistic estuarine conditions
+    # Ocean: ~8 mg/L = 250 mmol/m³, River: ~6.5 mg/L = 203 mmol/m³
+    o2_marine, o2_river = 250.0, 203.0  # CALIBRATED values
     o2_profile = o2_river + (o2_marine - o2_river) * salinity_normalized
     concentrations = concentrations.at[7, :].set(o2_profile)  # O2 [mmol/m³]
     
