@@ -343,29 +343,90 @@ def compute_phytoplankton_growth(phy1: jnp.ndarray, phy2: jnp.ndarray, no3: jnp.
             po4_uptake_phy1 + po4_uptake_phy2, si_uptake_phy1)
 
 @jit
+def compute_atmospheric_reaeration(o2_conc: jnp.ndarray, temperature: float, 
+                                 salinity: jnp.ndarray, depth: jnp.ndarray,
+                                 params: Dict[str, float], dt: float) -> jnp.ndarray:
+    """
+    CRITICAL FIX: Compute atmospheric reaeration to prevent oxygen collapse.
+    
+    Implements O'Connor-Dobbins gas exchange model with Wanninkhof (1992) 
+    wind speed parameterization to restore dissolved oxygen from atmosphere.
+    
+    Args:
+        o2_conc: Current O2 concentration [mmol/m³]
+        temperature: Water temperature [°C]
+        salinity: Salinity [PSU]
+        depth: Water depth [m]
+        params: Biogeochemical parameters
+        dt: Time step [s]
+    
+    Returns:
+        O2 reaeration rate [mmol/m³/s]
+    """
+    # CORRECTED Garcia & Gordon (1992) oxygen saturation
+    temp_k = temperature + 273.15
+    temp_s = jnp.log((298.15 - temperature) / temp_k)  # Correct temperature scaling
+    
+    # Garcia & Gordon (1992) coefficients - Table I
+    A0, A1, A2, A3 = 5.80871, 3.20291, 4.17887, 5.10006
+    A4, A5 = -9.86643e-2, 3.80369
+    B0, B1, B2, B3 = -7.01577e-3, -7.70028e-3, -1.13864e-2, -9.51519e-3
+    C0 = -2.75915e-7
+    
+    # Garcia & Gordon equation (1992) - Equation 8
+    ln_c_star = (A0 + A1 * temp_s + A2 * temp_s**2 + A3 * temp_s**3 + 
+                 A4 * temp_s**4 + A5 * temp_s**5 +
+                 salinity * (B0 + B1 * temp_s + B2 * temp_s**2 + B3 * temp_s**3) +
+                 C0 * salinity**2)
+    
+    # CRITICAL FIX: Convert from μmol/kg to mmol/m³ 
+    # Correct conversion: μmol/kg * (1025 kg/m³) / (1000 μmol/mmol) = mmol/m³
+    o2_sat = jnp.exp(ln_c_star) * 1.025  # mmol/m³
+    
+    # Gas transfer velocity using Wanninkhof (1992) model
+    wind_speed = params.get('wind_speed', 5.0)  # m/s
+    
+    # Schmidt number for O2 (temperature dependence)
+    schmidt = (1953.4 - 128.0 * temperature + 
+               3.9918 * temperature**2 - 
+               0.050091 * temperature**3)
+    schmidt = jnp.maximum(schmidt, 100.0)
+    
+    # Gas transfer velocity [m/s]
+    k_wanninkhof = 0.31 * wind_speed**2  # cm/hr
+    k_corrected = k_wanninkhof * (schmidt / 660.0)**(-0.5)  # cm/hr
+    k_gas = k_corrected * 0.01 / 3600.0  # Convert cm/hr to m/s
+    
+    # Reaeration rate using two-film theory: dO2/dt = k * (O2_sat - O2) / depth
+    saturation_deficit = o2_sat - o2_conc
+    reaeration_rate = k_gas * saturation_deficit / depth
+    
+    return reaeration_rate
+
+@jit
 def enforce_species_bounds(concentrations: jnp.ndarray) -> jnp.ndarray:
     """
     Apply physical bounds to all 17 species concentrations.
     """
-    # Create bounds dictionary for all species (min, max values)
+    # Create bounds dictionary for all species (min, max values) - RELAXED for seasonal variation
     species_bounds = jnp.array([
-        [0.01, 500.0],   # PHY1 - Diatoms [mmol C/m³]
-        [0.01, 500.0],   # PHY2 - Flagellates [mmol C/m³]
-        [0.1, 2000.0],   # SI - Silica [mmol/m³]
-        [0.1, 1000.0],   # NO3 - Nitrate [mmol/m³]
-        [0.1, 500.0],    # NH4 - Ammonium [mmol/m³]
-        [0.01, 100.0],   # PO4 - Phosphate [mmol/m³]
+        [0.001, 500.0],  # PHY1 - Diatoms [mmol C/m³] - Allow near-zero values
+        [0.001, 500.0],  # PHY2 - Flagellates [mmol C/m³] - Allow near-zero values
+        [0.01, 2000.0],  # SI - Silica [mmol/m³]
+        [0.01, 1000.0],  # NO3 - Nitrate [mmol/m³] - Allow lower values
+        [0.01, 500.0],   # NH4 - Ammonium [mmol/m³] - Allow lower values
+        [0.001, 100.0],  # PO4 - Phosphate [mmol/m³] - Allow very low values
         [0.001, 50.0],   # PIP - Particulate inorganic phosphorus [mmol/m³]
-        [1.0, 500.0],    # O2 - Oxygen [mmol/m³]
-        [1.0, 5000.0],   # TOC - Total organic carbon [mmol C/m³]
+        [0.1, 500.0],    # O2 - Oxygen [mmol/m³] - Allow anoxic conditions
+        [0.1, 5000.0],   # TOC - Total organic carbon [mmol C/m³] - Allow natural variation
         [0.0, 40.0],     # S - Salinity [PSU]
-        [1.0, 1000.0],   # SPM - Suspended particulate matter [mg/L]
-        [100.0, 5000.0], # DIC - Dissolved inorganic carbon [mmol C/m³]
-        [500.0, 5000.0], # AT - Total alkalinity [mmol/m³]
+        [0.1, 1000.0],   # SPM - Suspended particulate matter [mg/L] - Allow low values
+        [10.0, 5000.0],  # DIC - Dissolved inorganic carbon [mmol C/m³] - Relax lower bound
+        [100.0, 5000.0], # AT - Total alkalinity [mmol/m³] - Relax lower bound
         [0.0, 100.0],    # HS - Hydrogen sulfide [mmol/m³]
         [6.0, 9.5],      # PH - pH [pH units]
         [0.0, 5000.0],   # ALKC - Carbonate alkalinity [mmol/m³]
-        [1.0, 100.0],    # CO2 - Carbon dioxide [mmol C/m³]
+        [0.1, 100.0],    # CO2 - Carbon dioxide [mmol C/m³] - Allow low values
     ])
     
     # Apply bounds to each species
@@ -463,57 +524,62 @@ def biogeochemical_step(concentrations: jnp.ndarray, hydro_state,
     dic_change = -growth_phy1 - growth_phy2 + resp_phy1 + resp_phy2 + aerobic_degrad + anaerobic_degrad
     dic_new = dic + dic_change * dt
     
-    # === PHASE VI: ENHANCED CARBONATE CHEMISTRY STABILITY ===
-    # Implement proper buffering mechanisms and reduce temporal oscillations
+    # === PHASE VI: REALISTIC CARBONATE CHEMISTRY DYNAMICS ===
+    # Implement proper responsive biogeochemical cycles with reasonable smoothing
     
     # Raw biological rate calculations
     dic_rate_raw = -growth_phy1 - growth_phy2 + resp_phy1 + resp_phy2 + aerobic_degrad + anaerobic_degrad
     at_rate_raw = -nitrification + 0.8 * anaerobic_degrad
     
-    # PHASE VI Enhancement: Progressive temporal averaging to reduce oscillations
-    # Use a running average approach to smooth rapid fluctuations
-    averaging_timescale = 7200.0  # 2-hour smoothing timescale [s] - stronger smoothing
+    # PHASE VI Enhancement: Moderate temporal smoothing for stability without killing dynamics
+    # Use more responsive smoothing to allow seasonal patterns
+    averaging_timescale = 1800.0  # 30-minute smoothing timescale [s] - faster response
     smoothing_factor = dt / (averaging_timescale + dt)  # Exponential smoothing
     
-    # Apply temporal smoothing to raw rates
+    # Apply moderate temporal smoothing to raw rates
     dic_rate_smoothed = dic_rate_raw * smoothing_factor
     at_rate_smoothed = at_rate_raw * smoothing_factor
     
-    # Enhanced stability damping (Phase VI optimization) - stronger damping
-    stability_damping = 0.98  # Very strong damping (98% stability, 2% dynamics)
+    # Moderate stability damping (Phase VI optimization) - allow more dynamics
+    stability_damping = 0.7  # Moderate damping (70% stability, 30% dynamics)
     dic_rate = dic_rate_smoothed * stability_damping
     at_rate = at_rate_smoothed * stability_damping
     
-    # PHASE VI: Carbonate alkalinity with enhanced buffering mechanisms
-    # Implement proper carbonate buffer system dynamics
+    # PHASE VI: Carbonate alkalinity with moderate buffering for seasonal response
+    # Implement proper carbonate buffer system dynamics with responsiveness
     
     # Buffer capacity calculation (simplified Revelle factor approach)
     # Higher DIC/AT ratios reduce buffer capacity and increase pH sensitivity
     dic_at_ratio = jnp.clip(dic / (at + 1e-6), 0.5, 1.2)  # Typical marine range
     buffer_capacity = 2.0 - dic_at_ratio  # Higher ratio = lower buffer capacity
     
-    # Carbonate alkalinity rate with buffering
-    alkc_rate_base = buffer_capacity * 0.3 * (at_rate - 0.3 * dic_rate)  # Enhanced buffering
-    alkc_rate = alkc_rate_base * stability_damping  # Additional stability
+    # Carbonate alkalinity rate with moderate buffering
+    alkc_rate_base = buffer_capacity * 0.5 * (at_rate - 0.5 * dic_rate)  # Moderate buffering
+    alkc_rate = alkc_rate_base * stability_damping  # Apply consistent stability
     
     # Implement carbonate equilibrium constraints
     # Ensure ALKC remains within reasonable bounds relative to AT and DIC
     alkc_equilibrium_target = 0.7 * at - 0.2 * dic  # Typical carbonate-dominated alkalinity
     alkc_equilibrium_target = jnp.clip(alkc_equilibrium_target, 0.0, 0.9 * at)
     
-    # Gentle equilibrium correction (Phase VI stability enhancement)
-    equilibrium_timescale = 24 * 3600.0  # 24-hour equilibrium timescale - slower adjustment
+    # Moderate equilibrium correction (Phase VI seasonal responsiveness)
+    equilibrium_timescale = 6 * 3600.0  # 6-hour equilibrium timescale - faster adjustment
     equilibrium_correction = (alkc_equilibrium_target - alkc) / equilibrium_timescale
-    equilibrium_correction = jnp.clip(equilibrium_correction, -0.05 * alkc, 0.05 * alkc)  # Gentler corrections
+    equilibrium_correction = jnp.clip(equilibrium_correction, -0.1 * alkc, 0.1 * alkc)  # Moderate corrections
     
     # Final ALKC rate with equilibrium constraint
     alkc_rate = alkc_rate + equilibrium_correction * smoothing_factor
     
-    # === OXYGEN DYNAMICS ===
+    # === OXYGEN DYNAMICS WITH ATMOSPHERIC REAERATION ===
     o2_production = params['o2_to_c_photo'] * (growth_phy1 + growth_phy2)
     o2_consumption = (params['o2_to_c_resp'] * (resp_phy1 + resp_phy2) + 
                      params['o2_to_c_degrad'] * aerobic_degrad +
                      params['o2_to_n_nitrif'] * nitrification)
+    
+    # CRITICAL FIX: Add atmospheric reaeration to prevent oxygen collapse
+    o2_atmospheric_reaeration = compute_atmospheric_reaeration(
+        o2, temperature, salinity, depth, params, dt
+    )
     
     # === SET DERIVATIVES ===
     derivatives = derivatives.at[0].set(growth_phy1 - resp_phy1 - mort_phy1)  # PHY1
@@ -523,7 +589,7 @@ def biogeochemical_step(concentrations: jnp.ndarray, hydro_state,
     derivatives = derivatives.at[4].set(-nh4_uptake + params['n_to_c'] * (aerobic_degrad + anaerobic_degrad) - nitrification)  # NH4
     derivatives = derivatives.at[5].set(po4_mineralization - po4_uptake - p_adsorption_rate)  # PO4 with adsorption
     derivatives = derivatives.at[6].set(p_adsorption_rate)  # PIP with corrected equilibrium balance
-    derivatives = derivatives.at[7].set(o2_production - o2_consumption)  # O2
+    derivatives = derivatives.at[7].set(o2_production - o2_consumption + o2_atmospheric_reaeration)  # O2 with reaeration
     derivatives = derivatives.at[8].set(total_mort - aerobic_degrad - anaerobic_degrad)  # TOC
     derivatives = derivatives.at[9].set(0.0)  # S (salinity) - conservative tracer
     derivatives = derivatives.at[10].set(0.0)  # SPM - handled in transport

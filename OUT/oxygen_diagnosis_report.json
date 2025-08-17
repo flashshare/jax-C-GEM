@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-08-17T15:38:44.184923",
+  "oxygen_stats": {
+    "mean_mg_per_l": 7.624801158905029,
+    "min_mg_per_l": 6.578099250793457,
+    "max_mg_per_l": 8.083830833435059
+  },
+  "correlations": {
+    "NH4": -0.26593889615597543,
+    "NO3": 0.65473422059064,
+    "PHY1": NaN,
+    "PHY2": NaN,
+    "TOC": NaN
+  },
+  "parameters_validated": true
+}

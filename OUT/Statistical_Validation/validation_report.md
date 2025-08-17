@@ -3,8 +3,8 @@
 
 ## Executive Summary
 - Variables validated: 4
-- Average R²: -43.466
-- Average Nash-Sutcliffe: -43.466
+- Average R²: -37.485
+- Average Nash-Sutcliffe: -37.485
 
 ## Validation Results by Variable
 
@@ -62,13 +62,13 @@
 **Performance Metrics:**
 | Metric | Value |
 |--------|-------|
-| RMSE | 169.1580 |
-| MAE | 165.8201 |
-| R² | -24.5918 |
-| Nash-Sutcliffe | -24.5918 |
-| Percent Bias | 204.09% |
-| Kling-Gupta | -1.7303 |
-| Willmott Index | 0.2507 |
+| RMSE | 43.2053 |
+| MAE | 36.9070 |
+| R² | -0.6695 |
+| Nash-Sutcliffe | -0.6695 |
+| Percent Bias | 33.67% |
+| Kling-Gupta | -0.8442 |
+| Willmott Index | 0.4583 |
 | N Observations | 143 |
 
 **Statistical Tests:**
@@ -78,10 +78,10 @@
 - mann_whitney: p-value = 0.0000
 
 **Residual Analysis:**
-- Mean residual: 165.8201
-- Residual std: 33.4383
-- Within 1σ: 0.0%
-- Within 2σ: 0.0%
+- Mean residual: 27.3593
+- Residual std: 33.4389
+- Within 1σ: 45.5%
+- Within 2σ: 89.5%
 
 ### TIDAL_RANGE_SIHYMECC
 **Performance Metrics:**

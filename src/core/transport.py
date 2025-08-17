@@ -291,12 +291,38 @@ def create_initial_transport_state(model_config: Dict[str, Any]) -> TransportSta
     # Set salinity (species index 9) with CORRECT gradient
     concentrations = concentrations.at[9, :].set(salinity_profile)
     
-    # Set other realistic initial concentrations
-    concentrations = concentrations.at[7, :].set(250.0)  # O2 [mmol/m³]
-    concentrations = concentrations.at[8, :].set(100.0)  # TOC [mmol/m³]
-    concentrations = concentrations.at[3, :].set(10.0)   # NO3 [mmol/m³]
-    concentrations = concentrations.at[4, :].set(5.0)    # NH4 [mmol/m³]
-    concentrations = concentrations.at[5, :].set(2.0)    # PO4 [mmol/m³]
-    concentrations = concentrations.at[10, :].set(50.0)  # SPM [mg/L]
+    # Set other realistic initial concentrations with spatial variability
+    # Create nutrient gradients correlated with salinity (estuarine mixing)
+    salinity_normalized = (salinity_profile - river_salinity) / (ocean_salinity - river_salinity)
+    
+    # Oxygen: higher in marine, lower in riverine/organic-rich areas
+    o2_marine, o2_river = 280.0, 180.0
+    o2_profile = o2_river + (o2_marine - o2_river) * salinity_normalized
+    concentrations = concentrations.at[7, :].set(o2_profile)  # O2 [mmol/m³]
+    
+    # TOC: higher in riverine, lower in marine (opposite to salinity)
+    toc_marine, toc_river = 50.0, 200.0
+    toc_profile = toc_marine + (toc_river - toc_marine) * (1 - salinity_normalized)
+    concentrations = concentrations.at[8, :].set(toc_profile)  # TOC [mmol/m³]
+    
+    # Nitrate: typical estuarine gradient
+    no3_marine, no3_river = 5.0, 25.0
+    no3_profile = no3_marine + (no3_river - no3_marine) * (1 - salinity_normalized)
+    concentrations = concentrations.at[3, :].set(no3_profile)   # NO3 [mmol/m³]
+    
+    # Ammonium: higher in riverine/organic areas  
+    nh4_marine, nh4_river = 0.5, 5.0
+    nh4_profile = nh4_marine + (nh4_river - nh4_marine) * (1 - salinity_normalized)
+    concentrations = concentrations.at[4, :].set(nh4_profile)    # NH4 [mmol/m³]
+    
+    # Phosphate: correlated with organic matter
+    po4_marine, po4_river = 0.2, 3.0
+    po4_profile = po4_marine + (po4_river - po4_marine) * (1 - salinity_normalized)
+    concentrations = concentrations.at[5, :].set(po4_profile)    # PO4 [mmol/m³]
+    
+    # SPM: higher in riverine areas
+    spm_marine, spm_river = 20.0, 100.0
+    spm_profile = spm_marine + (spm_river - spm_marine) * (1 - salinity_normalized)
+    concentrations = concentrations.at[10, :].set(spm_profile)  # SPM [mg/L]
     
     return TransportState(concentrations=concentrations)

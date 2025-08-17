@@ -14,9 +14,9 @@
 - Nash-Sutcliffe = -1.804
 
 **oxygen:**
-- R² = -34.247
-- RMSE = 171.521
-- Nash-Sutcliffe = -34.247
+- R² = -1.122
+- RMSE = 42.090
+- Nash-Sutcliffe = -1.122
 
 **tidal_range_sihymecc:**
 - R² = -498.684
@@ -36,9 +36,9 @@
 - Nash-Sutcliffe = -1.804
 
 **oxygen:**
-- R² = -34.247
-- RMSE = 171.521
-- Nash-Sutcliffe = -34.247
+- R² = -1.122
+- RMSE = 42.090
+- Nash-Sutcliffe = -1.122
 
 **tidal_range_sihymecc:**
 - R² = -498.684

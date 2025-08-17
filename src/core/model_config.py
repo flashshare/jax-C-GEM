@@ -45,16 +45,16 @@ REDFIELD_SI = 15.0 / 106.0
 REDFIELD_N = 16.0 / 106.0  
 REDFIELD_P = 1.0 / 106.0
 
-# Default biogeochemical parameters (ultra-stable for smooth profiles)
+# Default biogeochemical parameters (scientifically realistic for estuarine dynamics)
 DEFAULT_BIO_PARAMS = {
-    # Phytoplankton parameters - ULTRA CONSERVATIVE for 180s time step
-    'mumax_dia': 1.39e-7,    # Maximum growth rate for diatoms [1/s] - 100x slower for stability
-    'mumax_ndia': 1.39e-7,   # Maximum growth rate for non-diatoms [1/s] - 100x slower
-    'alpha_light': 4.11e-9,  # Light saturation parameter - 100x slower
-    'resp_dia': 4.0e-10,     # Respiration rate for diatoms [1/s] - 100x slower
-    'resp_ndia': 4.0e-10,    # Respiration rate for non-diatoms [1/s] - 100x slower
-    'mort_dia': 3.6e-10,     # Mortality rate for diatoms [1/s] - 100x slower
-    'mort_ndia': 3.6e-10,    # Mortality rate for non-diatoms [1/s] - 100x slower
+    # Phytoplankton parameters - REALISTIC VALUES for proper biogeochemical response
+    'mumax_dia': 2.31e-5,    # Maximum growth rate for diatoms [1/s] (2.0/day at 20°C)
+    'mumax_ndia': 1.85e-5,   # Maximum growth rate for non-diatoms [1/s] (1.6/day at 20°C)
+    'alpha_light': 1.39e-6,  # Light saturation parameter [m² s μmol⁻¹]
+    'resp_dia': 1.16e-6,     # Respiration rate for diatoms [1/s] (0.1/day)
+    'resp_ndia': 1.16e-6,    # Respiration rate for non-diatoms [1/s] (0.1/day)
+    'mort_dia': 1.16e-6,     # Mortality rate for diatoms [1/s] (0.1/day)
+    'mort_ndia': 1.16e-6,    # Mortality rate for non-diatoms [1/s] (0.1/day)
     
     # Half-saturation constants
     'ks_no3': 12.13,  # Half-saturation for NO3 [mmol/m³]
@@ -72,10 +72,10 @@ DEFAULT_BIO_PARAMS = {
     'ki_o2_anaerobic': 33.0,  # O2 inhibition of anaerobic processes
     'ki_o2_denitrif': 33.0,  # O2 inhibition of denitrification
     
-    # Rate constants - ULTRA CONSERVATIVE for smooth profiles
-    'degrad_rate': 1.8e-9,   # Organic matter degradation rate [1/s] - 1000x slower for stability
-    'nitrif_rate': 1.6e-9,   # Nitrification rate [1/s] - 1000x slower for stability
-    'denitrif_rate': 3.05e-9,  # Denitrification rate [1/s] - 1000x slower for stability
+    # Rate constants - REALISTIC VALUES for proper biogeochemical cycling
+    'degrad_rate': 5.79e-7,   # Organic matter degradation rate [1/s] (0.05/day)
+    'nitrif_rate': 5.79e-7,   # Nitrification rate [1/s] (0.05/day)
+    'denitrif_rate': 1.16e-6,  # Denitrification rate [1/s] (0.1/day)
     
     # Temperature dependence (Q10 values)
     'q10_phyto': 1.067,  # Q10 for phytoplankton processes
@@ -94,8 +94,11 @@ DEFAULT_BIO_PARAMS = {
     'o2_to_c_degrad': 106.0/106.0,  # O2:C ratio in degradation
     'o2_to_n_nitrif': 2.0,  # O2:N ratio in nitrification
     
+    # Atmospheric reaeration parameters (CRITICAL FIX)
+    'wind_speed': 5.0,  # Wind speed for gas exchange [m/s] - typical estuarine value
+    
     # Other parameters
-    'anaerobic_factor': 0.01,  # Ultra-slow anaerobic processes for stability
+    'anaerobic_factor': 0.3,  # Realistic anaerobic processes for seasonal response
 }
 
 # Species physical bounds [min, max] for numerical stability
