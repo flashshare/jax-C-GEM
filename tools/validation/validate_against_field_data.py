@@ -133,7 +133,7 @@ class FieldDataValidator:
         
         # Auto-detect format if not specified
         if model_output_format == "auto":
-            npz_file = self.model_output_dir / "simulation_results.npz"
+            npz_file = self.model_output_dir / "complete_simulation_results.npz"
             hydro_dir = self.model_output_dir / "Hydrodynamics"
             
             if npz_file.exists():
@@ -362,7 +362,7 @@ class FieldDataValidator:
     
     def _load_model_results_npz(self):
         """Load model results from NPZ file."""
-        npz_file = self.model_output_dir / "simulation_results.npz"
+        npz_file = self.model_output_dir / "complete_simulation_results.npz"
         if not npz_file.exists():
             print(f"⚠️ Model results file not found: {npz_file}")
             return

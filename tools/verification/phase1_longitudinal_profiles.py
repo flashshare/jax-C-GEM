@@ -44,7 +44,7 @@ UNIT_CONVERSION_FACTORS = {
 
 def load_model_results(results_dir="OUT"):
     """Load model results in NPZ format (preferred) or CSV fallback."""
-    npz_file = Path(results_dir) / "simulation_results.npz"
+    npz_file = Path(results_dir) / "complete_simulation_results.npz"
     
     if npz_file.exists():
         print(f"📊 Loading model results from {npz_file}")

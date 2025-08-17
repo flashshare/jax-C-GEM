@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 """
-Multi-Station Field Validation Framework - Phase VII Task 18
-===========================================================
 
 Comprehensive validation framework against CARE, CEM, SIHYMECC field observations
 with statistical methodology for sparse data calibration following the 
@@ -20,8 +18,6 @@ Scientific Methodology:
 - Robust statistical metrics (RMSE, R², Nash-Sutcliffe, KGE)
 - Residual analysis and bias detection
 
-Author: JAX-C-GEM Development Team
-Date: Phase VII Implementation
 """
 
 import jax.numpy as jnp

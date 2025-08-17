@@ -12,8 +12,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MAXT (50)*24*60*60   /* hydrodynamic & transport warm up + real simulation/saving data*/
-#define WARMUP 30*24*60*60   /*warm up period; switch on saving function of biogeo, transport, hydro if t>WARMUP*/
+#define MAXT (465)*24*60*60   /* hydrodynamic & transport warm up + real simulation/saving data*/
+#define WARMUP 100*24*60*60   /*warm up period; switch on saving function of biogeo, transport, hydro if t>WARMUP*/
 #define DELTI 180           /*delta t [sec]*/
 #define TS	20			/*save every TS. time step   (1--> every 180 seconds; 120 = 6 hours --> 4 values/day)*/
 #define DELXI 2000          /*delta x [m]*/

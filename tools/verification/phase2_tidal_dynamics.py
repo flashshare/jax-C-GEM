@@ -39,7 +39,7 @@ TIDAL_STATIONS = {
 
 def load_model_hydrodynamics(results_dir="OUT"):
     """Load model hydrodynamic results."""
-    npz_file = Path(results_dir) / "simulation_results.npz"
+    npz_file = Path(results_dir) / "complete_simulation_results.npz"
     
     if npz_file.exists():
         print(f"🌊 Loading model hydrodynamics from {npz_file}")

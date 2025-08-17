@@ -1,0 +1,265 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        // ========================================
+        // ESSENTIAL EXECUTION TASKS  
+        // ========================================
+        {
+            "label": "🚀 Run Model",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "src/main.py",
+                "--mode",
+                "run",
+                "--output-format",
+                "auto",
+                "--no-physics-check"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "🎯 Run the C-GEM model with adaptive optimization (auto-detects best format)"
+        },
+        {
+            "label": "⚡ Ultra-Performance Mode",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "src/main_ultra_performance.py"
+            ],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "⚡ Ultra-high performance mode with vectorized batch processing (2x faster)"
+        },
+        {
+            "label": "🔬 Run with Physics Validation",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "src/main.py",
+                "--mode",
+                "run",
+                "--output-format",
+                "csv"
+            ],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "🔬 Run with CSV output format for detailed analysis"
+        },
+        {
+            "label": "🐛 Debug Mode",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "src/main.py",
+                "--mode",
+                "run",
+                "--output-format",
+                "csv",
+                "--debug"
+            ],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "🐛 Run with debug mode and CSV output"
+        },
+
+        // ========================================
+        // ANALYSIS AND VISUALIZATION
+        // ========================================
+        {
+            "label": "🎨 Generate Publication Figures",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "tools/plotting/publication_output.py",
+                "--results-dir", "OUT",
+                "--field-data-dir", "INPUT/Calibration",
+                "--output-dir", "OUT/Publication"
+            ],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "🎨 Generate comprehensive multi-panel publication figures with 3-station analysis"
+        },
+        {
+            "label": "🔍 Quick Results View",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "tools/plotting/show_results.py"
+            ],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "🔍 Quick interactive visualization (auto NPZ/CSV detection)"
+        },
+
+        // ========================================
+        // THREE-PHASE VERIFICATION SYSTEM
+        // ========================================
+        {
+            "label": "📏 Phase 1: Longitudinal Profiles",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "tools/verification/phase1_longitudinal_profiles.py"
+            ],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "📏 Validate spatial profiles against CEM field data (2-158km from mouth) with unit conversion"
+        },
+        {
+            "label": "🌊 Phase 2: Tidal Dynamics",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "tools/verification/phase2_tidal_dynamics.py"
+            ],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "🌊 Validate tidal ranges against SIHYMECC data at PC (86km), BD (130km), BK (156km) stations"
+        },
+        {
+            "label": "📅 Phase 3: Seasonal Cycles",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "tools/verification/phase3_seasonal_cycles.py"
+            ],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "📅 Validate temporal patterns against CARE long-term data at PC station (116km from mouth)"
+        },
+        
+        // ========================================
+        // VALIDATION TOOLS
+        // ========================================
+        {
+            "label": "🔬 Statistical Model Validation",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "tools/validation/model_validation_statistical.py"
+            ],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "🔬 Comprehensive statistical validation with RMSE, R², Nash-Sutcliffe, residual analysis"
+        },
+        {
+            "label": "🌊 Field Data Validation",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "tools/validation/validate_against_field_data.py",
+                "--results-dir", "OUT",
+                "--field-data-dir", "INPUT/Calibration",
+                "--output-dir", "OUT/Validation"
+            ],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "🌊 Validate model outputs against CARE, CEM, SIHYMECC field observations"
+        },
+        {
+            "label": "🏆 Comprehensive C-GEM vs JAX Benchmark",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "tools/validation/comprehensive_cgem_benchmark.py",
+                "--output-dir", "OUT/Benchmarks"
+            ],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "🏆 Complete benchmark: performance, memory, accuracy with publication-ready reports"
+        },
+        {
+            "label": "⚙️ Original C-GEM Benchmark",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/c",
+                "cd deprecated\\original-C-GEM && compile_and_run.bat"
+            ],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "⚙️ Compile and benchmark original C-GEM (365 days) - establishes performance baseline"
+        },
+
+        // ========================================
+        // SCIENTIFIC ANALYSIS TOOLS
+        // ========================================  
+        {
+            "label": "🎯 Gradient-Based Calibration",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "tools/calibration/gradient_calibrator.py",
+                "--field-data-dir", "INPUT/Calibration",
+                "--output-dir", "OUT/Calibration"
+            ],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "🎯 Run JAX-native gradient-based parameter calibration with sparse data methodology"
+        },
+        {
+            "label": "📈 Sensitivity Analysis",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "tools/analysis/sensitivity_analyzer.py",
+                "--results-dir", "OUT",
+                "--output-dir", "OUT/Sensitivity"
+            ],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "📈 Perform parameter sensitivity analysis using JAX autodiff"
+        },
+
+        // ========================================
+        // PHYSICS VALIDATION TOOLS
+        // ========================================
+        {
+            "label": "📊 Simple Physics Plot",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "src/core/simple_physics_validation.py"
+            ],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "📊 Create simple physics validation plot (longitudinal profiles + tidal dynamics)"
+        }
+    ]
+}
