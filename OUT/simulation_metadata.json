@@ -1,0 +1,31 @@
+{
+  "simulation_days": 31535820.0,
+  "time_steps": 16081,
+  "grid_points": 102,
+  "format_version": "1.0",
+  "created": "2025-08-18 18:19:27",
+  "hydro_variables": [
+    "H",
+    "U",
+    "time"
+  ],
+  "species_variables": [
+    "PHY1",
+    "PHY2",
+    "SI",
+    "NO3",
+    "NH4",
+    "PO4",
+    "PIP",
+    "O2",
+    "TOC",
+    "S",
+    "SPM",
+    "DIC",
+    "AT",
+    "HS",
+    "PH",
+    "ALKC",
+    "CO2"
+  ]
+}

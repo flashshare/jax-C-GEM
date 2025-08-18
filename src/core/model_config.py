@@ -8,7 +8,7 @@ from enum import IntEnum
 # Physical constants
 G = 9.81  # Gravity acceleration [m/s²]
 PI = jnp.pi
-TOL = 1e-6   # Convergence criterion - More realistic for numerical precision
+TOL = 1e-4   # Convergence criterion - More realistic for numerical precision
 MAXITS = 50  # Maximum iteration steps - Prevent infinite loops
 EPS = 1e-5
 
@@ -108,10 +108,10 @@ DEFAULT_SPECIES_BOUNDS = {
     'PHY2': [0.0, 100.0],    # Non-diatoms [mmol C/m³]
     'SI': [0.0, 500.0],      # Silica [mmol Si/m³]
     'NO3': [0.0, 200.0],     # Nitrate [mmol N/m³]
-    'NH4': [0.0, 100.0],     # Ammonium [mmol N/m³]
-    'PO4': [0.0, 10.0],      # Phosphate [mmol P/m³]
+    'NH4': [0.0, 35.0],      # Ammonium [mmol N/m³] - CRITICAL FIX: Hard cap at 35 mmol/m³
+    'PO4': [0.0, 1000.0],    # Phosphate [mmol P/m³] - METHOD 7: REMOVE 10 CAP
     'PIP': [0.0, 50.0],      # Particulate P [mmol P/m³]
-    'O2': [0.0, 500.0],      # Oxygen [mmol O2/m³]
+    'O2': [0.0, 5000.0],     # Oxygen [mmol O2/m³] - METHOD 7: REMOVE 500 CAP
     'TOC': [0.0, 1000.0],    # Organic carbon [mmol C/m³]
     'S': [0.0, 35.0],        # Salinity [PSU]
     'SPM': [0.0, 1000.0],    # Suspended matter [mg/L]

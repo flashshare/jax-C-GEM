@@ -111,7 +111,63 @@ def select_optimal_output_format(output_format: str, expected_outputs: int) -> s
     return chosen_format
 
 def print_performance_summary(total_time: float, mode: str = "standard"):
-    """Print final performance summary."""
+    """Print final performance summary with physics validation debug."""
+    
+    # Add physics validation debug messages
+    print("\n🔬 PHYSICS VALIDATION DEBUG")
+    print("=" * 40)
+    
+    try:
+        # Quick physics validation check
+        import numpy as np
+        import os
+        
+        if os.path.exists("OUT/complete_simulation_results.npz"):
+            data = np.load("OUT/complete_simulation_results.npz")
+            
+            # Check NH4 spikes
+            if 'NH4' in data:
+                nh4_data = data['NH4']
+                warmup_steps = int(0.2 * nh4_data.shape[0])
+                nh4_profile = np.mean(nh4_data[warmup_steps:], axis=0)
+                nh4_max = np.max(nh4_profile)
+                nh4_spikes = np.sum(nh4_profile > 40.0)
+                
+                print(f"🧪 NH4 Analysis:")
+                print(f"   Maximum: {nh4_max:.1f} mmol/m³")
+                print(f"   Spikes >40: {nh4_spikes} grid points")
+                print(f"   Status: {'✅ GOOD' if nh4_max <= 40.0 else '⚠️ SPIKES DETECTED'}")
+            
+            # Check PO4 variation
+            if 'PO4' in data:
+                po4_data = data['PO4']
+                po4_profile = np.mean(po4_data[warmup_steps:], axis=0)
+                po4_std = np.std(po4_profile)
+                po4_mean = np.mean(po4_profile)
+                po4_cov = (po4_std/po4_mean)*100 if po4_mean > 0 else 0
+                
+                print(f"🧪 PO4 Analysis:")
+                print(f"   Range: {np.min(po4_profile):.6f} - {np.max(po4_profile):.6f} mmol/m³")
+                print(f"   CoV: {po4_cov:.1f}%")
+                print(f"   Status: {'✅ GOOD' if po4_cov > 5.0 else '⚠️ LOW VARIATION'}")
+            
+            # Check Salinity
+            if 'S' in data:
+                s_data = data['S']
+                s_profile = np.mean(s_data[warmup_steps:], axis=0)
+                s_range = np.max(s_profile) - np.min(s_profile)
+                
+                print(f"🧪 Salinity Analysis:")
+                print(f"   Range: {np.min(s_profile):.1f} - {np.max(s_profile):.1f} PSU")
+                print(f"   Gradient: {s_range:.1f} PSU")
+                print(f"   Status: {'✅ GOOD' if s_range > 10.0 else '⚠️ WEAK GRADIENT'}")
+                
+        else:
+            print("⚠️ Results file not found - cannot validate physics")
+            
+    except Exception as e:
+        print(f"⚠️ Physics validation error: {e}")
+    
     print("\n" + "=" * 50)
     if mode == "ultra":
         print(f"⚡ Ultra-Performance JAX C-GEM completed in {total_time:.1f}s")

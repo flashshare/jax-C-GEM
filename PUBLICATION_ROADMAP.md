@@ -214,7 +214,222 @@ Model predicts 5.6-5.8 m tidal range vs. observed 2.1-3.3 m (systematic 2x overe
 - [ ] KGE > 0.6 for key species
 - [ ] Bias ratios within 0.7-1.3 range
 
+### Task 3.3: Phase III Validation Results Analysis
+**Timeline: COMPLETED**  
+**Status: 🚨 CRITICAL ISSUES IDENTIFIED**  
+
+#### Validation Results Summary
+**COMPLETED: August 17, 2025**
+
+**Overall Performance:**
+- NSE > 0.5: **0/15 validations (0.0%)** ❌
+- KGE > 0.6: **0/15 validations (0.0%)** ❌  
+- R² > 0.5: **2/15 validations (13.3%)** ❌
+
+#### Critical Findings
+
+**1. Biogeochemical System Collapse:**
+- TOC: NSE = -25.595 (28x magnitude error)
+- O2: NSE = -90.571 (oxygen system failure)  
+- PO4: NSE = -17.357 (phosphorus dynamics broken)
+
+**2. Hydrodynamic Over-Amplification:**
+- PC: 208.2% tidal error (6.55m vs 2.12m)
+- BD: 148.5% tidal error (7.31m vs 2.94m)
+- BK: 87.6% tidal error (6.14m vs 3.27m)
+
+**3. Partial Transport Success:**
+- Salinity: R² = 0.937 ✅ (excellent spatial structure)
+- SPM: R² = 0.773 ✅ (good sediment transport)
+
+### Task 3.4: Root Cause Diagnosis & Action Plan
+**Timeline: COMPLETED**
+**Status: 📋 SYSTEMATIC FIXES IDENTIFIED**
+
+#### Priority 1: Biogeochemical Emergency Fixes
+**Root Causes Identified:**
+- Missing atmospheric oxygen reaeration
+- Incorrect Q10 temperature factors
+- Wrong TOC mineralization rates
+- Broken O2-organic matter coupling
+
+**Specific Actions Required:**
+```python
+# src/core/biogeochemistry.py fixes needed:
+1. Implement k_reaeration = f(wind_speed, temperature)
+2. Fix Q10 coefficients for all reactions
+3. Correct TOC → CO2 + O2 stoichiometry  
+4. Validate all rate constants against literature
+```
+
+#### Priority 2: Hydrodynamic Amplitude Correction
+**Root Causes Identified:**
+- Inadequate friction despite Phase II improvements
+- Possible boundary condition errors (AMPL=4.43m)
+- Numerical amplification in shallow regions
+
+**Specific Actions Required:**
+```python
+# src/core/hydrodynamics.py fixes needed:
+1. Increase friction: Chezy1=150→250, Chezy2=200→300
+2. Implement depth-dependent friction formulation
+3. Add wave energy dissipation terms
+4. Validate boundary forcing amplitude
+```
+
+#### Priority 3: Transport Calibration Refinement
+**Root Causes Identified:**
+- Species-specific dispersion not implemented
+- Tributary input magnitudes questionable
+- Boundary concentrations need validation
+
 ---
+
+## Phase IV: SYSTEMATIC MODEL IMPROVEMENTS (Week 6)
+**Status: 🔧 IMPLEMENTATION READY**
+
+### Task 4.1: Biogeochemical System Reconstruction
+**Timeline: 3-4 days**  
+**Priority: 🚨 EMERGENCY**  
+
+#### Oxygen System Emergency Fix
+- [ ] Implement atmospheric reaeration: `k_O2 = f(wind, temp, salinity)`
+- [ ] Fix temperature dependencies: `rate = rate_20C * Q10^((T-20)/10)`
+- [ ] Correct O2 consumption stoichiometry for all processes
+- [ ] Add surface oxygen exchange boundary condition
+
+#### Organic Carbon Cycling Repair
+- [ ] Fix TOC mineralization: `TOC + O2 → CO2 + biomass`
+- [ ] Implement proper C:N:P ratios (Redfield: 106:16:1)
+- [ ] Add temperature-dependent decay rates
+- [ ] Validate against Volta et al. (2016) parameters
+
+#### Success Criteria
+- [ ] O2 levels: 3-8 mg/L (realistic estuarine range)
+- [ ] TOC magnitude within 3x of observations
+- [ ] NSE > 0.3 for all biogeochemical variables
+- [ ] No negative concentrations or crashes
+
+### Task 4.2: Hydrodynamic Amplitude Calibration  
+**Timeline: 2-3 days**
+**Priority: 🚨 EMERGENCY**
+
+#### Enhanced Friction Implementation
+- [ ] Increase base friction: Chezy1=250, Chezy2=300
+- [ ] Implement depth-dependent formulation: `f = f0 * (h/h_ref)^n`
+- [ ] Add vegetation/roughness effects in shallow areas
+- [ ] Test spatial friction variation
+
+#### Boundary Condition Validation
+- [ ] Validate AMPL=4.43m against field measurements
+- [ ] Implement reflection coefficient: `R = (A_up - A_down)/(A_up + A_down)`
+- [ ] Check phase relationships in tidal forcing
+- [ ] Add energy dissipation at boundaries
+
+#### Success Criteria  
+- [ ] Tidal errors < 100% at all stations
+- [ ] Proper spatial amplification pattern
+- [ ] No unrealistic velocity spikes
+- [ ] Mass conservation maintained
+
+### Task 4.3: Transport Physics Enhancement
+**Timeline: 1-2 days**
+**Priority: 🔶 HIGH**
+
+#### Species-Specific Transport  
+- [ ] Implement variable dispersion: `D_species = D_base * factor_species`
+- [ ] Add molecular diffusion for nutrients
+- [ ] Check tributary input concentrations vs. field data
+- [ ] Validate boundary condition magnitudes
+
+#### Numerical Accuracy Improvements
+- [ ] Check CFL stability conditions
+- [ ] Implement higher-order advection schemes if needed
+- [ ] Add mass balance verification
+- [ ] Test grid resolution sensitivity
+
+### Task 4.4: Integrated System Validation
+**Timeline: 1-2 days** 
+**Priority: 🔶 HIGH**
+
+#### Comprehensive Re-Testing
+- [ ] Run full validation suite after each fix
+- [ ] Monitor system stability and mass balance
+- [ ] Check for new coupling issues
+- [ ] Validate against all three field datasets
+
+#### Performance Verification
+- [ ] Achieve NSE > 0.5 for primary variables
+- [ ] Achieve KGE > 0.6 for key species
+- [ ] Maintain R² > 0.7 for salinity
+- [ ] Reduce tidal errors to < 50%
+
+---
+
+## Phase V: PUBLICATION-READY VALIDATION (Week 7)
+**Status: 🎯 AWAITING PHASE IV COMPLETION**
+
+### Task 5.1: Final Validation Campaign
+**Timeline: 2-3 days**
+**Prerequisites: Phase IV fixes complete**
+
+#### Complete Statistical Assessment  
+- [ ] Re-run advanced statistical validation
+- [ ] Generate publication-quality figures
+- [ ] Calculate confidence intervals and uncertainty bounds
+- [ ] Perform sensitivity analysis on key parameters
+
+#### Multi-Dataset Cross-Validation
+- [ ] Validate against all three datasets simultaneously
+- [ ] Check temporal consistency (2017-2018 coverage)
+- [ ] Verify spatial patterns across estuary length
+- [ ] Test seasonal cycle reproduction
+
+#### Success Criteria (Publication Ready)
+- [ ] NSE > 0.5 for all major variables
+- [ ] KGE > 0.7 for primary species (NH4, NO3, PO4, O2)
+- [ ] R² > 0.7 for spatial profiles
+- [ ] R² > 0.4 for seasonal cycles
+- [ ] Tidal dynamics within 25% error
+
+### Task 5.2: Scientific Documentation
+**Timeline: 2 days**
+**Priority: 📝 PUBLICATION PREP**
+
+#### Comprehensive Method Documentation
+- [ ] Document all calibration procedures
+- [ ] Explain sparse data validation methodology  
+- [ ] Detail model improvements and their scientific basis
+- [ ] Create reproducibility documentation
+
+#### Results Presentation
+- [ ] Generate multi-panel validation figures
+- [ ] Create performance summary tables
+- [ ] Develop error analysis and uncertainty quantification
+- [ ] Prepare supplementary materials
+
+---
+
+## EXPECTED OUTCOMES
+
+**Week 6 End State:**
+- Functional biogeochemical system with realistic O2/TOC dynamics
+- Properly calibrated hydrodynamics with <100% tidal errors
+- Enhanced transport physics with species-specific parameters
+
+**Week 7 End State:**  
+- Publication-ready model with NSE > 0.5 for major variables
+- Comprehensive validation against three independent datasets
+- Full documentation and reproducibility package
+- Ready for scientific journal submission
+
+**Publication Impact:**
+- First JAX-based estuarine biogeochemical model
+- Advanced sparse data validation methodology  
+- High-performance computing for environmental science
+- Transferable framework for global estuary applications
+
+The systematic approach outlined above transforms the current research prototype into a scientifically rigorous, publication-ready model through targeted fixes based on comprehensive validation results.
 
 ## Phase IV: CALIBRATION & OPTIMIZATION (Week 6)
 **Status: 🎯 SYSTEMATIC CALIBRATION**
